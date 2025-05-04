@@ -8,7 +8,16 @@ export default function NavigationBar() {
   return (
     <nav className="w-full h-16 flex items-center justify-between px-6 bg-white/90 dark:bg-gray-900/80 shadow-md fixed top-0 left-0 z-20">
       <div className="text-xl font-bold tracking-tight text-blue-700 dark:text-blue-300 flex items-center gap-2">
-        <FaBookOpen className="inline-block mb-1" /> Notify App
+        <Link
+          href="/"
+          className={`hover:text-blue-600 transition ${
+            pathname === "/diary"
+              ? "text-blue-600 border-b-2 border-blue-600 pb-1"
+              : "text-gray-700 dark:text-gray-200"
+          }`}
+        >
+          <FaBookOpen className="inline-block mb-1" /> Notify App
+        </Link>
       </div>
       <div className="flex gap-6 text-base font-semibold">
         <Link
