@@ -35,18 +35,57 @@ export default async function DiaryPage() {
       idx
   );
 
-  // 気分に応じた色
-  const moodColor = (mood: string) => {
-    switch (mood) {
-      case "良い":
-        return "#4caf50";
-      case "普通":
-        return "#ff9800";
-      case "悪い":
-        return "#f44336";
-      default:
-        return "#9e9e9e";
-    }
+  // 気分に応じた絵文字
+  const moodEmoji = (mood: string) => {
+    const emojiMap: Record<string, string> = {
+      嬉しい: "😊",
+      悲しい: "😢",
+      怒り: "😡",
+      不安: "😰",
+      安心: "😌",
+      疲れた: "😩",
+      ワクワク: "🤩",
+      イライラ: "😠",
+      感謝: "🙏",
+      寂しい: "😔",
+      楽しい: "😆",
+      退屈: "😑",
+      焦り: "😣",
+      満足: "😋",
+      後悔: "😞",
+      感動: "😭",
+      やる気: "🔥",
+      無気力: "😶",
+      混乱: "😵‍💫",
+      平和: "🕊️",
+      孤独: "🥲",
+      充実: "💪",
+      絶望: "😱",
+      希望: "🌈",
+      誇り: "😤",
+      恥ずかしい: "😳",
+      恐怖: "👻",
+      驚き: "😲",
+      愛情: "❤️",
+      嫉妬: "😒",
+      羨ましい: "🤤",
+      罪悪感: "😓",
+      緊張: "😬",
+      リラックス: "🛀",
+      困惑: "🤔",
+      感心: "👏",
+      疑問: "❓",
+      納得: "👌",
+      感激: "🥹",
+      感無量: "🥲",
+      幸福: "🥰",
+      絶好調: "💯",
+      最悪: "💀",
+      普通: "😐",
+      良い: "🙂",
+      悪い: "🙁",
+    };
+    return emojiMap[mood] || "";
   };
 
   return (
@@ -70,22 +109,12 @@ export default async function DiaryPage() {
             <div
               style={{ display: "flex", alignItems: "center", marginBottom: 8 }}
             >
-              {item.mood.map((m, i) => (
-                <span
-                  key={i}
-                  style={{
-                    display: "inline-block",
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    background: moodColor(m),
-                    marginRight: 4,
-                  }}
-                  title={m}
-                ></span>
-              ))}
               <span style={{ fontWeight: "bold", marginRight: 12 }}>
-                {item.mood.join("・")}
+                {item.mood.map((m, i) => (
+                  <span key={i} style={{ marginRight: 4 }}>
+                    {moodEmoji(m)} {m}
+                  </span>
+                ))}
               </span>
               <span style={{ color: "#888", fontSize: 13 }}>{item.time}</span>
             </div>
