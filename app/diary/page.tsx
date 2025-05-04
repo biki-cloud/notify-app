@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { EMOJI_LIST, moodEmoji } from "../emojiList";
+import { moodEmoji } from "../emojiList";
 
 // ユーザーIDは現状1つのみと仮定
 const USER_ID = "3ccee381-9aab-4a26-9ca6-251c395cd68e";
