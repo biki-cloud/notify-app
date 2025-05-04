@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
   const [message, setMessage] = useState("");
@@ -155,6 +156,14 @@ export default function Home() {
           >
             Push通知を購読
           </button>
+        </div>
+        <div style={{ margin: "16px 0" }}>
+          <Link
+            href="/settings"
+            style={{ color: "#1976d2", textDecoration: "underline" }}
+          >
+            通知設定画面へ
+          </Link>
         </div>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">

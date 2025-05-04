@@ -4,8 +4,4 @@ export default withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
-  // ここを追加
-  watchOptions: {
-    ignored: ["**/.Trash/**"],
-  },
 });
