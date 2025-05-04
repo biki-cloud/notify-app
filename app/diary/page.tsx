@@ -1,49 +1,25 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-// ai_log.jsonの型定義
-interface AiLogEntry {
-  timestamp: string;
-  prompt: string;
-  response: string;
-}
-
 // ユーザーIDは現状1つのみと仮定
 const USER_ID = "3ccee381-9aab-4a26-9ca6-251c395cd68e";
 
-// promptから個別日記を抽出する関数
-function parsePrompt(prompt: string) {
-  // 例: 【1件目】\n時刻: ...\n気分: ...\n日記: ...\n\n【2件目】... という形式
-  const entryRegex =
-    /【(\d+)件目】\n時刻: ([^\n]+)\n気分: ([^\n]+)\n日記: ([^\n]+)/g;
-  const results: { time: string; mood: string; text: string }[] = [];
-  let match;
-  while ((match = entryRegex.exec(prompt)) !== null) {
-    results.push({
-      time: match[2],
-      mood: match[3],
-      text: match[4],
-    });
-  }
-  return results;
-}
-
 export default async function DiaryPage() {
-  // ai_log.jsonを読み込む
-  const aiLogPath = path.resolve(process.cwd(), "ai_log.json");
-  const aiLogRaw = await fs.readFile(aiLogPath, "utf-8");
-  const aiLog: Record<string, AiLogEntry[]> = JSON.parse(aiLogRaw);
-  const entries = aiLog[USER_ID] || [];
+  // record.jsonを読み込む
+  const recordPath = path.resolve(process.cwd(), "record.json");
+  const recordRaw = await fs.readFile(recordPath, "utf-8");
+  const record: Record<
+    string,
+    Record<string, { mood: string; diary: string }>
+  > = JSON.parse(recordRaw);
+  const userRecords = record[USER_ID] || {};
 
   // 日記エントリを展開
-  const diaryItems = entries.flatMap((entry) => {
-    const prompts = parsePrompt(entry.prompt);
-    return prompts.map((p) => ({
-      ...p,
-      response: entry.response,
-      timestamp: entry.timestamp,
-    }));
-  });
+  const diaryItems = Object.entries(userRecords).map(([time, value]) => ({
+    time,
+    mood: value.mood,
+    text: value.diary,
+  }));
 
   // 新しい順にソート
   diaryItems.sort((a, b) => b.time.localeCompare(a.time));
