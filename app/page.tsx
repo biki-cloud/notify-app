@@ -66,74 +66,131 @@ export default function Home() {
           <h2 className="text-xl font-bold mb-4 text-green-700 dark:text-green-300">
             今日の記録
           </h2>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {[
-              { label: "嬉しい", emoji: "😊" },
-              { label: "悲しい", emoji: "😢" },
-              { label: "怒り", emoji: "😡" },
-              { label: "不安", emoji: "😰" },
-              { label: "安心", emoji: "😌" },
-              { label: "疲れた", emoji: "😩" },
-              { label: "ワクワク", emoji: "🤩" },
-              { label: "イライラ", emoji: "😠" },
-              { label: "感謝", emoji: "🙏" },
-              { label: "寂しい", emoji: "😔" },
-              { label: "楽しい", emoji: "😆" },
-              { label: "退屈", emoji: "😑" },
-              { label: "焦り", emoji: "😣" },
-              { label: "満足", emoji: "😋" },
-              { label: "後悔", emoji: "😞" },
-              { label: "感動", emoji: "😭" },
-              { label: "やる気", emoji: "🔥" },
-              { label: "無気力", emoji: "😶" },
-              { label: "混乱", emoji: "😵‍💫" },
-              { label: "平和", emoji: "🕊️" },
-              { label: "孤独", emoji: "🥲" },
-              { label: "充実", emoji: "💪" },
-              { label: "絶望", emoji: "😱" },
-              { label: "希望", emoji: "🌈" },
-              { label: "誇り", emoji: "😤" },
-              { label: "恥ずかしい", emoji: "😳" },
-              { label: "恐怖", emoji: "👻" },
-              { label: "驚き", emoji: "😲" },
-              { label: "愛情", emoji: "❤️" },
-              { label: "嫉妬", emoji: "😒" },
-              { label: "羨ましい", emoji: "🤤" },
-              { label: "罪悪感", emoji: "😓" },
-              { label: "緊張", emoji: "😬" },
-              { label: "リラックス", emoji: "🛀" },
-              { label: "困惑", emoji: "🤔" },
-              { label: "感心", emoji: "👏" },
-              { label: "疑問", emoji: "❓" },
-              { label: "納得", emoji: "👌" },
-              { label: "感激", emoji: "🥹" },
-              { label: "感無量", emoji: "🥲" },
-              { label: "幸福", emoji: "🥰" },
-              { label: "絶好調", emoji: "💯" },
-              { label: "最悪", emoji: "💀" },
-              { label: "普通", emoji: "😐" },
-              { label: "良い", emoji: "🙂" },
-              { label: "悪い", emoji: "🙁" },
-            ].map(({ label, emoji }) => (
-              <label key={label}>
-                <input
-                  type="checkbox"
-                  name="mood"
-                  value={label}
-                  checked={mood.includes(label)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setMood([...mood, label]);
-                    } else {
-                      setMood(mood.filter((m) => m !== label));
-                    }
-                  }}
-                />
-                <span className="ml-1">
-                  {emoji} {label}
-                </span>
-              </label>
-            ))}
+          <div className="mb-2">
+            <div className="font-bold text-green-700 dark:text-green-300 mb-1">
+              ポジティブ
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {[
+                { label: "嬉しい", emoji: "😊" },
+                { label: "楽しい", emoji: "😆" },
+                { label: "ワクワク", emoji: "🤩" },
+                { label: "満足", emoji: "😋" },
+                { label: "感謝", emoji: "🙏" },
+                { label: "感動", emoji: "😭" },
+                { label: "やる気", emoji: "🔥" },
+                { label: "充実", emoji: "💪" },
+                { label: "希望", emoji: "🌈" },
+                { label: "誇り", emoji: "😤" },
+                { label: "幸福", emoji: "🥰" },
+                { label: "絶好調", emoji: "💯" },
+                { label: "安心", emoji: "😌" },
+                { label: "リラックス", emoji: "🛀" },
+                { label: "納得", emoji: "👌" },
+                { label: "感心", emoji: "👏" },
+                { label: "感激", emoji: "🥹" },
+                { label: "感無量", emoji: "🥲" },
+                { label: "愛情", emoji: "❤️" },
+              ].map(({ label, emoji }) => (
+                <label key={label}>
+                  <input
+                    type="checkbox"
+                    name="mood"
+                    value={label}
+                    checked={mood.includes(label)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setMood([...mood, label]);
+                      } else {
+                        setMood(mood.filter((m) => m !== label));
+                      }
+                    }}
+                  />
+                  <span className="ml-1">
+                    {emoji} {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="font-bold text-red-700 dark:text-red-300 mb-1 mt-2">
+              ネガティブ
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {[
+                { label: "悲しい", emoji: "😢" },
+                { label: "怒り", emoji: "😡" },
+                { label: "不安", emoji: "😰" },
+                { label: "疲れた", emoji: "😩" },
+                { label: "イライラ", emoji: "😠" },
+                { label: "寂しい", emoji: "😔" },
+                { label: "退屈", emoji: "😑" },
+                { label: "焦り", emoji: "😣" },
+                { label: "後悔", emoji: "😞" },
+                { label: "無気力", emoji: "😶" },
+                { label: "混乱", emoji: "😵‍💫" },
+                { label: "孤独", emoji: "🥲" },
+                { label: "絶望", emoji: "😱" },
+                { label: "恥ずかしい", emoji: "😳" },
+                { label: "恐怖", emoji: "👻" },
+                { label: "驚き", emoji: "😲" },
+                { label: "嫉妬", emoji: "😒" },
+                { label: "羨ましい", emoji: "🤤" },
+                { label: "罪悪感", emoji: "😓" },
+                { label: "緊張", emoji: "😬" },
+                { label: "困惑", emoji: "🤔" },
+                { label: "疑問", emoji: "❓" },
+                { label: "最悪", emoji: "💀" },
+                { label: "悪い", emoji: "🙁" },
+              ].map(({ label, emoji }) => (
+                <label key={label}>
+                  <input
+                    type="checkbox"
+                    name="mood"
+                    value={label}
+                    checked={mood.includes(label)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setMood([...mood, label]);
+                      } else {
+                        setMood(mood.filter((m) => m !== label));
+                      }
+                    }}
+                  />
+                  <span className="ml-1">
+                    {emoji} {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="font-bold text-gray-700 dark:text-gray-300 mb-1 mt-2">
+              ニュートラル・その他
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {[
+                { label: "普通", emoji: "😐" },
+                { label: "平和", emoji: "🕊️" },
+                { label: "良い", emoji: "🙂" },
+              ].map(({ label, emoji }) => (
+                <label key={label}>
+                  <input
+                    type="checkbox"
+                    name="mood"
+                    value={label}
+                    checked={mood.includes(label)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setMood([...mood, label]);
+                      } else {
+                        setMood(mood.filter((m) => m !== label));
+                      }
+                    }}
+                  />
+                  <span className="ml-1">
+                    {emoji} {label}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
           <textarea
             className="border rounded px-2 py-1 w-full"
