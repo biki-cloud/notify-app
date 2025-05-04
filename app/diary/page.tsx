@@ -48,6 +48,13 @@ export default async function DiaryPage() {
   // 新しい順にソート
   diaryItems.sort((a, b) => b.time.localeCompare(a.time));
 
+  // timeとtextで重複排除
+  const uniqueDiaryItems = diaryItems.filter(
+    (item, idx, self) =>
+      self.findIndex((v) => v.time === item.time && v.text === item.text) ===
+      idx
+  );
+
   // 気分に応じた色
   const moodColor = (mood: string) => {
     switch (mood) {
@@ -68,7 +75,7 @@ export default async function DiaryPage() {
         日記の振り返り
       </h1>
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {diaryItems.map((item, idx) => (
+        {uniqueDiaryItems.map((item, idx) => (
           <li
             key={idx}
             style={{
@@ -101,19 +108,6 @@ export default async function DiaryPage() {
             <div style={{ marginBottom: 12, whiteSpace: "pre-line" }}>
               {item.text}
             </div>
-            {item.response && (
-              <div
-                style={{
-                  background: "#f5f5f5",
-                  borderRadius: 6,
-                  padding: 10,
-                  fontSize: 15,
-                }}
-              >
-                <strong>コーチングメッセージ:</strong>
-                <div style={{ marginTop: 4 }}>{item.response}</div>
-              </div>
-            )}
           </li>
         ))}
       </ul>
