@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
 export default function Home() {
-  const [mood, setMood] = useState("");
+  const [mood, setMood] = useState<string[]>([]);
   const [diary, setDiary] = useState("");
   const [recordLoading, setRecordLoading] = useState(false);
   const [recordMsg, setRecordMsg] = useState("");
   const [latestRecord, setLatestRecord] = useState<{
-    mood: string;
+    mood: string[];
     diary: string;
   } | null>(null);
   const today = dayjs().format("YYYY-MM-DD");
@@ -23,7 +23,15 @@ export default function Home() {
     fetch(`/api/record?userId=${userId}&date=${today}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.mood || data.diary) setLatestRecord(data);
+        if (data.mood || data.diary) {
+          // moodがstring型なら配列に変換
+          const moodArr = Array.isArray(data.mood)
+            ? data.mood
+            : data.mood
+            ? [data.mood]
+            : [];
+          setLatestRecord({ ...data, mood: moodArr });
+        }
       });
   }, [userId, today]);
 
@@ -39,7 +47,7 @@ export default function Home() {
       });
       if (res.ok) {
         setRecordMsg("記録しました！");
-        setLatestRecord({ mood, diary });
+        setLatestRecord({ mood: [...mood], diary });
       } else {
         setRecordMsg("記録に失敗しました");
       }
@@ -59,36 +67,24 @@ export default function Home() {
             今日の記録
           </h2>
           <div className="flex gap-2 mb-2">
-            <label>
-              <input
-                type="radio"
-                name="mood"
-                value="良い"
-                checked={mood === "良い"}
-                onChange={() => setMood("良い")}
-              />
-              <span className="ml-1">良い</span>
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="mood"
-                value="普通"
-                checked={mood === "普通"}
-                onChange={() => setMood("普通")}
-              />
-              <span className="ml-1">普通</span>
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="mood"
-                value="悪い"
-                checked={mood === "悪い"}
-                onChange={() => setMood("悪い")}
-              />
-              <span className="ml-1">悪い</span>
-            </label>
+            {["良い", "普通", "悪い"].map((label) => (
+              <label key={label}>
+                <input
+                  type="checkbox"
+                  name="mood"
+                  value={label}
+                  checked={mood.includes(label)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setMood([...mood, label]);
+                    } else {
+                      setMood(mood.filter((m) => m !== label));
+                    }
+                  }}
+                />
+                <span className="ml-1">{label}</span>
+              </label>
+            ))}
           </div>
           <textarea
             className="border rounded px-2 py-1 w-full"
@@ -100,7 +96,7 @@ export default function Home() {
           <button
             className="mt-4 px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700 transition"
             onClick={saveRecord}
-            disabled={recordLoading || !mood}
+            disabled={recordLoading || mood.length === 0}
           >
             {recordLoading ? "記録中..." : "記録する"}
           </button>
@@ -110,7 +106,12 @@ export default function Home() {
           {latestRecord && (
             <div className="mt-4 text-sm text-gray-700 dark:text-gray-200">
               <div>直近の記録：</div>
-              <div>気分：{latestRecord.mood}</div>
+              <div>
+                気分：
+                {Array.isArray(latestRecord.mood)
+                  ? latestRecord.mood.join("・")
+                  : latestRecord.mood}
+              </div>
               <div>日記：{latestRecord.diary}</div>
             </div>
           )}

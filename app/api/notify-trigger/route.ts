@@ -55,7 +55,7 @@ export async function POST() {
         } else if (setting.type === "ai") {
           let content = "";
           // ユーザーの最新3件の記録を取得
-          let recentRecords: { date: string; mood: string; diary: string }[] =
+          let recentRecords: { date: string; mood: string[]; diary: string }[] =
             [];
           try {
             const recordData = await fs.readFile(RECORD_FILE, "utf-8");
@@ -69,7 +69,15 @@ export async function POST() {
             const sorted = Object.entries(userRecords)
               .sort(([a], [b]) => b.localeCompare(a))
               .slice(0, 3)
-              .map(([date, rec]) => ({ date, ...rec }));
+              .map(([date, rec]) => ({
+                date,
+                mood: Array.isArray(rec.mood)
+                  ? rec.mood
+                  : rec.mood
+                  ? [rec.mood]
+                  : [],
+                diary: rec.diary,
+              }));
             recentRecords = sorted;
           } catch {}
           if (recentRecords.length > 0) {
@@ -78,7 +86,7 @@ export async function POST() {
               .map(
                 (rec, i) =>
                   `【${i + 1}件目】\n時刻: ${rec.date}\n気分: ${
-                    rec.mood
+                    Array.isArray(rec.mood) ? rec.mood.join("・") : rec.mood
                   }\n日記: ${rec.diary}`
               )
               .join("\n\n");

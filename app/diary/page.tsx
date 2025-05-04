@@ -10,14 +10,18 @@ export default async function DiaryPage() {
   const recordRaw = await fs.readFile(recordPath, "utf-8");
   const record: Record<
     string,
-    Record<string, { mood: string; diary: string }>
+    Record<string, { mood: string[]; diary: string }>
   > = JSON.parse(recordRaw);
   const userRecords = record[USER_ID] || {};
 
   // 日記エントリを展開
   const diaryItems = Object.entries(userRecords).map(([time, value]) => ({
     time,
-    mood: value.mood,
+    mood: Array.isArray(value.mood)
+      ? value.mood
+      : value.mood
+      ? [value.mood]
+      : [],
     text: value.diary,
   }));
 
@@ -66,18 +70,22 @@ export default async function DiaryPage() {
             <div
               style={{ display: "flex", alignItems: "center", marginBottom: 8 }}
             >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: moodColor(item.mood),
-                  marginRight: 8,
-                }}
-              ></span>
+              {item.mood.map((m, i) => (
+                <span
+                  key={i}
+                  style={{
+                    display: "inline-block",
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    background: moodColor(m),
+                    marginRight: 4,
+                  }}
+                  title={m}
+                ></span>
+              ))}
               <span style={{ fontWeight: "bold", marginRight: 12 }}>
-                {item.mood}
+                {item.mood.join("・")}
               </span>
               <span style={{ color: "#888", fontSize: 13 }}>{item.time}</span>
             </div>

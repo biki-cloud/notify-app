@@ -20,14 +20,16 @@ export async function POST(req: NextRequest) {
   const now = date || getJSTISOString();
   let records: Record<
     string,
-    Record<string, { mood: string; diary: string }>
+    Record<string, { mood: string[]; diary: string }>
   > = {};
   try {
     const data = await fs.readFile(RECORD_FILE, "utf-8");
     records = JSON.parse(data);
   } catch {}
   if (!records[userId]) records[userId] = {};
-  records[userId][now] = { mood, diary };
+  // moodがstringなら配列化
+  const moodArr = Array.isArray(mood) ? mood : mood ? [mood] : [];
+  records[userId][now] = { mood: moodArr, diary };
   await fs.writeFile(RECORD_FILE, JSON.stringify(records, null, 2));
   return NextResponse.json({ ok: true });
 }
@@ -41,12 +43,21 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "userIdは必須です" }, { status: 400 });
   let records: Record<
     string,
-    Record<string, { mood: string; diary: string }>
+    Record<string, { mood: string[]; diary: string }>
   > = {};
   try {
     const data = await fs.readFile(RECORD_FILE, "utf-8");
     records = JSON.parse(data);
   } catch {}
+  // 既存データ互換: moodがstringなら配列化
+  const convertMood = (entry: { mood: unknown; diary: string }) => ({
+    ...entry,
+    mood: Array.isArray(entry.mood)
+      ? entry.mood
+      : entry.mood
+      ? [entry.mood]
+      : [],
+  });
   if (date) {
     // 日付（YYYY-MM-DD）で始まる最新の記録を返す
     const userRecords = records[userId] || {};
@@ -54,11 +65,16 @@ export async function GET(req: NextRequest) {
       .filter(([k]) => k.startsWith(date))
       .sort(([a], [b]) => b.localeCompare(a));
     if (filtered.length > 0) {
-      return NextResponse.json(filtered[0][1]);
+      return NextResponse.json(convertMood(filtered[0][1]));
     } else {
       return NextResponse.json({});
     }
   } else {
-    return NextResponse.json(records[userId] || {});
+    const userRecords = records[userId] || {};
+    // 全件moodを配列化
+    const converted = Object.fromEntries(
+      Object.entries(userRecords).map(([k, v]) => [k, convertMood(v)])
+    );
+    return NextResponse.json(converted);
   }
 }
