@@ -16,12 +16,19 @@ type PushSubscription = {
 const SUBS_FILE = path.resolve(process.cwd(), "subscriptions.json");
 const USER_SETTINGS_FILE = path.resolve(process.cwd(), "user-settings.json");
 const RECORD_FILE = path.resolve(process.cwd(), "record.json");
+const AI_LOG_FILE = path.resolve(process.cwd(), "ai_log.json");
 
 webpush.setVapidDetails(
   "mailto:example@example.com",
   process.env.VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );
+
+function getJSTISOString() {
+  const now = new Date();
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return jst.toISOString().replace(".000Z", "+09:00");
+}
 
 export async function POST() {
   let subs: PushSubscription[] = [];
@@ -46,6 +53,7 @@ export async function POST() {
         if (setting.type === "custom" && setting.customMessage) {
           body = setting.customMessage;
         } else if (setting.type === "ai") {
+          let content = "";
           // ユーザーの最新3件の記録を取得
           let recentRecords: { date: string; mood: string; diary: string }[] =
             [];
@@ -66,7 +74,7 @@ export async function POST() {
           } catch {}
           if (recentRecords.length > 0) {
             // OpenAI APIに3日分の記録内容を投げてコーチングメッセージを生成
-            const content = recentRecords
+            content = recentRecords
               .map(
                 (rec, i) =>
                   `【${i + 1}件目】\n時刻: ${rec.date}\n気分: ${
@@ -74,7 +82,6 @@ export async function POST() {
                   }\n日記: ${rec.diary}`
               )
               .join("\n\n");
-            console.log("content", content);
             try {
               const openaiRes = await fetch(
                 "https://api.openai.com/v1/chat/completions",
@@ -105,6 +112,31 @@ export async function POST() {
             } catch {
               body = "コーチングメッセージの生成に失敗しました";
             }
+            // AIログ保存
+            if (userId) {
+              try {
+                const aiLogData = await fs.readFile(AI_LOG_FILE, "utf-8");
+                const aiLog: Record<string, unknown[]> = JSON.parse(aiLogData);
+                if (!aiLog[userId]) aiLog[userId] = [];
+                aiLog[userId].push({
+                  timestamp: getJSTISOString(),
+                  prompt: content,
+                  response: body,
+                });
+                await fs.writeFile(AI_LOG_FILE, JSON.stringify(aiLog, null, 2));
+              } catch {
+                // ファイルがない場合など
+                const aiLog: Record<string, unknown[]> = {};
+                aiLog[userId] = [
+                  {
+                    timestamp: getJSTISOString(),
+                    prompt: content,
+                    response: body,
+                  },
+                ];
+                await fs.writeFile(AI_LOG_FILE, JSON.stringify(aiLog, null, 2));
+              }
+            }
           } else {
             body = "記録が見つかりませんでした";
           }
@@ -114,7 +146,8 @@ export async function POST() {
         title: "PWAプッシュ通知",
         body,
       });
-      return webpush.sendNotification(sub, payload);
+      const result = await webpush.sendNotification(sub, payload);
+      return result;
     })
   );
   return NextResponse.json({
