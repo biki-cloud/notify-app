@@ -143,36 +143,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex flex-col">
-      {/* ヒーローセクション */}
-      <header className="w-full py-10 flex flex-col items-center justify-center bg-white/80 dark:bg-black/30 shadow-md">
-        <Image
-          src="/next.svg"
-          alt="Notify App"
-          width={120}
-          height={32}
-          className="mb-2 dark:invert"
-        />
-        <h1 className="text-3xl font-bold mb-2 tracking-tight text-gray-800 dark:text-white">
-          Notify App
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
-          あなたの毎日を、もっと前向きに。
-        </p>
-        <div className="flex gap-4 mt-2">
-          <Link
-            href="/diary"
-            className="flex items-center gap-2 px-6 py-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow transition"
-          >
-            <FaBookOpen /> 日記を振り返る
-          </Link>
-          <Link
-            href="/settings"
-            className="flex items-center gap-2 px-6 py-2 rounded-full bg-purple-500 hover:bg-purple-600 text-white font-semibold shadow transition"
-          >
-            <FaCog /> 通知設定
-          </Link>
-        </div>
-      </header>
+      {/* ヒーローセクション（ナビ下に余白追加） */}
 
       <main className="flex flex-col items-center flex-1 w-full px-4 py-8 gap-8">
         {/* 通知カード */}
