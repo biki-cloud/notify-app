@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { EMOJI_LIST, moodEmoji } from "../emojiList";
 
 // ユーザーIDは現状1つのみと仮定
 const USER_ID = "3ccee381-9aab-4a26-9ca6-251c395cd68e";
@@ -34,59 +35,6 @@ export default async function DiaryPage() {
       self.findIndex((v) => v.time === item.time && v.text === item.text) ===
       idx
   );
-
-  // 気分に応じた絵文字
-  const moodEmoji = (mood: string) => {
-    const emojiMap: Record<string, string> = {
-      嬉しい: "😊",
-      悲しい: "😢",
-      怒り: "😡",
-      不安: "😰",
-      安心: "😌",
-      疲れた: "😩",
-      ワクワク: "🤩",
-      イライラ: "😠",
-      感謝: "🙏",
-      寂しい: "😔",
-      楽しい: "😆",
-      退屈: "😑",
-      焦り: "😣",
-      満足: "😋",
-      後悔: "😞",
-      感動: "😭",
-      やる気: "🔥",
-      無気力: "😶",
-      混乱: "😵‍💫",
-      平和: "🕊️",
-      孤独: "🥲",
-      充実: "💪",
-      絶望: "😱",
-      希望: "🌈",
-      誇り: "😤",
-      恥ずかしい: "😳",
-      恐怖: "👻",
-      驚き: "😲",
-      愛情: "❤️",
-      嫉妬: "😒",
-      羨ましい: "🤤",
-      罪悪感: "😓",
-      緊張: "😬",
-      リラックス: "🛀",
-      困惑: "🤔",
-      感心: "👏",
-      疑問: "❓",
-      納得: "👌",
-      感激: "🥹",
-      感無量: "🥲",
-      幸福: "🥰",
-      絶好調: "💯",
-      最悪: "💀",
-      普通: "😐",
-      良い: "🙂",
-      悪い: "🙁",
-    };
-    return emojiMap[mood] || "";
-  };
 
   return (
     <main style={{ maxWidth: 600, margin: "40px auto", padding: 16 }}>
