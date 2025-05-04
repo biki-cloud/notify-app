@@ -1,9 +1,6 @@
 "use client";
-import Image from "next/image";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import dayjs from "dayjs";
-import { FaBookOpen, FaCog } from "react-icons/fa";
 
 export default function Home() {
   const [message, setMessage] = useState("");
