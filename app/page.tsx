@@ -170,6 +170,7 @@ export default function Home() {
                 { label: "普通", emoji: "😐" },
                 { label: "平和", emoji: "🕊️" },
                 { label: "良い", emoji: "🙂" },
+                { label: "お腹減った", emoji: "🍙" },
               ].map(({ label, emoji }) => (
                 <label key={label}>
                   <input
