@@ -2,12 +2,26 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dayjs from "dayjs";
 
 export default function Home() {
   const [message, setMessage] = useState("");
   const [mode, setMode] = useState<"custom" | "quote">("custom");
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [vapidKey, setVapidKey] = useState<string | null>(null);
+  const [mood, setMood] = useState("");
+  const [diary, setDiary] = useState("");
+  const [recordLoading, setRecordLoading] = useState(false);
+  const [recordMsg, setRecordMsg] = useState("");
+  const [latestRecord, setLatestRecord] = useState<{
+    mood: string;
+    diary: string;
+  } | null>(null);
+  const today = dayjs().format("YYYY-MM-DD");
+  const userId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("notify_user_id") || "demo_user"
+      : "demo_user";
 
   // 通知許可リクエスト
   useEffect(() => {
@@ -22,6 +36,16 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => setVapidKey(data.key));
   }, []);
+
+  // 記録取得
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/record?userId=${userId}&date=${today}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.mood || data.diary) setLatestRecord(data);
+      });
+  }, [userId, today]);
 
   // 名言取得関数
   const fetchQuote = async () => {
@@ -92,6 +116,29 @@ export default function Home() {
     }
     return outputArray;
   }
+
+  // 記録保存
+  const saveRecord = async () => {
+    setRecordLoading(true);
+    setRecordMsg("");
+    try {
+      const res = await fetch("/api/record", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, mood, diary, date: today }),
+      });
+      if (res.ok) {
+        setRecordMsg("記録しました！");
+        setLatestRecord({ mood, diary });
+      } else {
+        setRecordMsg("記録に失敗しました");
+      }
+    } catch {
+      setRecordMsg("記録に失敗しました");
+    } finally {
+      setRecordLoading(false);
+    }
+  };
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -173,6 +220,66 @@ export default function Home() {
           >
             通知設定画面へ
           </Link>
+        </div>
+        {/* ユーザー記録UI */}
+        <div className="flex flex-col gap-4 p-4 border rounded bg-white/80 dark:bg-black/30 w-full max-w-md mt-8">
+          <div className="font-bold mb-2">今日の記録</div>
+          <div className="flex gap-2 mb-2">
+            <label>
+              <input
+                type="radio"
+                name="mood"
+                value="良い"
+                checked={mood === "良い"}
+                onChange={() => setMood("良い")}
+              />
+              <span className="ml-1">良い</span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="mood"
+                value="普通"
+                checked={mood === "普通"}
+                onChange={() => setMood("普通")}
+              />
+              <span className="ml-1">普通</span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="mood"
+                value="悪い"
+                checked={mood === "悪い"}
+                onChange={() => setMood("悪い")}
+              />
+              <span className="ml-1">悪い</span>
+            </label>
+          </div>
+          <textarea
+            className="border rounded px-2 py-1"
+            rows={3}
+            value={diary}
+            onChange={(e) => setDiary(e.target.value)}
+            placeholder="今日のひとことや出来事など"
+          />
+          <button
+            className="px-4 py-2 rounded text-white bg-green-600"
+            onClick={saveRecord}
+            disabled={recordLoading || !mood}
+          >
+            {recordLoading ? "記録中..." : "記録する"}
+          </button>
+          {recordMsg && (
+            <div className="text-sm text-green-700 mt-1">{recordMsg}</div>
+          )}
+          {latestRecord && (
+            <div className="mt-4 text-sm text-gray-700">
+              <div>直近の記録：</div>
+              <div>気分：{latestRecord.mood}</div>
+              <div>日記：{latestRecord.diary}</div>
+            </div>
+          )}
         </div>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
