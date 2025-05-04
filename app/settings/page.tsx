@@ -32,11 +32,19 @@ export default function SettingsPage() {
   }, []);
 
   // 設定の保存
-  const handleSave = () => {
+  const handleSave = async () => {
     const settings = { type, customMessage };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+    // サーバーにも保存
+    if (userId) {
+      await fetch("/api/user-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, type, customMessage }),
+      });
+    }
   };
 
   return (

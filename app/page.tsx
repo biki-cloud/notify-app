@@ -58,14 +58,23 @@ export default function Home() {
   const subscribePush = async () => {
     if (!("serviceWorker" in navigator) || !vapidKey) return;
     const reg = await navigator.serviceWorker.ready;
+    // 既存購読があれば解除
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) {
+      await existing.unsubscribe();
+    }
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
+    const userId = localStorage.getItem("notify_user_id");
+    // デバッグ出力
+    console.log("sub", sub);
+    console.log("userId", userId);
     await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sub),
+      body: JSON.stringify({ ...sub.toJSON(), userId }),
     });
     alert("Push通知の購読が完了しました");
   };
