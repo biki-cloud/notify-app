@@ -46,8 +46,9 @@ export async function POST() {
         if (setting.type === "custom" && setting.customMessage) {
           body = setting.customMessage;
         } else if (setting.type === "ai") {
-          // ユーザーの最新記録を取得
-          let latestRecord = null;
+          // ユーザーの最新3件の記録を取得
+          let recentRecords: { date: string; mood: string; diary: string }[] =
+            [];
           try {
             const recordData = await fs.readFile(RECORD_FILE, "utf-8");
             const records = JSON.parse(recordData);
@@ -56,14 +57,24 @@ export async function POST() {
             if (userId && records[userId]) {
               userRecords = records[userId];
             }
-            // 最新日付を取得
-            const dates = Object.keys(userRecords).sort().reverse();
-            if (dates.length > 0) {
-              latestRecord = userRecords[dates[0]];
-            }
+            // 日付で降順ソートし、直近3件を取得
+            const sorted = Object.entries(userRecords)
+              .sort(([a], [b]) => b.localeCompare(a))
+              .slice(0, 3)
+              .map(([date, rec]) => ({ date, ...rec }));
+            recentRecords = sorted;
           } catch {}
-          if (latestRecord) {
-            // OpenAI APIに記録内容を投げてコーチングメッセージを生成
+          if (recentRecords.length > 0) {
+            // OpenAI APIに3日分の記録内容を投げてコーチングメッセージを生成
+            const content = recentRecords
+              .map(
+                (rec, i) =>
+                  `【${i + 1}件目】\n時刻: ${rec.date}\n気分: ${
+                    rec.mood
+                  }\n日記: ${rec.diary}`
+              )
+              .join("\n\n");
+            console.log("content", content);
             try {
               const openaiRes = await fetch(
                 "https://api.openai.com/v1/chat/completions",
@@ -74,19 +85,16 @@ export async function POST() {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    model: "gpt-3.5-turbo",
+                    model: "gpt-4o",
                     messages: [
                       {
                         role: "system",
                         content:
-                          "あなたは優しいコーチです。ユーザーの気分や日記を受けて、前向きなコーチングメッセージを日本語で短く返してください。",
+                          "あなたは、ユーザーの気持ちに寄り添い、励ましの言葉をかける優しい日本人のメンタルコーチです。\n\n以下はユーザーの直近3件の気分と日記です。全体を通して、ユーザーが今どんな気持ちでいるかを感じ取り、その気持ちを認めた上で、前向きになれるような一言メッセージを日本語で優しく短く届けてください。\n\n必要なら「～しても大丈夫」「～でもいいんだよ」「あなたはよくやってる」など、安心感を与える表現も取り入れてください。",
                       },
-                      {
-                        role: "user",
-                        content: `気分: ${latestRecord.mood}\n日記: ${latestRecord.diary}`,
-                      },
+                      { role: "user", content },
                     ],
-                    max_tokens: 60,
+                    max_tokens: 80,
                   }),
                 }
               );
