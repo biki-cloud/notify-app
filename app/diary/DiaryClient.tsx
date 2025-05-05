@@ -14,6 +14,7 @@ export default function DiaryClient() {
       });
       if (res.ok) {
         setMessage("コーチング通知を送信しました！");
+        window.location.reload();
       } else {
         setMessage("通知送信に失敗しました");
       }
