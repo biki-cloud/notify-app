@@ -60,6 +60,7 @@ export async function POST() {
             [];
           let userGoal = "";
           let userHabit = "";
+          let totalCostStr = "-";
           try {
             // 目標データの取得
             const goalsData = await fs.readFile(GOALS_FILE, "utf-8");
@@ -138,6 +139,25 @@ export async function POST() {
               body =
                 openaiData.choices?.[0]?.message?.content?.trim() ||
                 "コーチングメッセージの生成に失敗しました";
+
+              // --- 料金計算処理追加 ---
+              try {
+                const usage = openaiData.usage;
+                if (usage) {
+                  // gpt-4-turbo: input $0.01/1K, output $0.03/1K
+                  const inputTokens = usage.prompt_tokens || 0;
+                  const outputTokens = usage.completion_tokens || 0;
+                  const inputCost = (inputTokens / 1000) * 0.01;
+                  const outputCost = (outputTokens / 1000) * 0.03;
+                  const totalCostUSD = inputCost + outputCost;
+                  const totalCostJPY =
+                    Math.round(totalCostUSD * 150 * 100) / 100; // 小数第2位まで
+                  totalCostStr = `${totalCostJPY}円 ($${totalCostUSD.toFixed(
+                    4
+                  )})`;
+                }
+              } catch {}
+              // --- ここまで ---
             } catch {
               body = "コーチングメッセージの生成に失敗しました";
             }
@@ -151,6 +171,7 @@ export async function POST() {
                   timestamp: getJSTISOString(),
                   prompt: content,
                   response: body,
+                  total_cost_jp_en: totalCostStr,
                 });
                 await fs.writeFile(AI_LOG_FILE, JSON.stringify(aiLog, null, 2));
               } catch {
@@ -161,6 +182,7 @@ export async function POST() {
                     timestamp: getJSTISOString(),
                     prompt: content,
                     response: body,
+                    total_cost_jp_en: totalCostStr,
                   },
                 ];
                 await fs.writeFile(AI_LOG_FILE, JSON.stringify(aiLog, null, 2));
