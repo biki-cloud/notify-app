@@ -6,6 +6,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex flex-col">
       <main className="flex flex-col items-center flex-1 w-full px-4 py-8 gap-8">
+        {/* AIコーチの顔画像を表示 */}
+        <img
+          src="/coach.png"
+          alt="AIコーチ"
+          className="w-32 h-32 rounded-full shadow-lg border-4 border-purple-200 dark:border-purple-700 bg-white object-cover mb-2"
+        />
         <section className="bg-white/70 dark:bg-gray-900/70 rounded-3xl shadow-xl p-8 max-w-xl w-full flex flex-col items-center gap-4 border border-purple-100 dark:border-gray-700">
           <h1 className="text-3xl font-bold text-purple-700 dark:text-purple-300 mb-2">
             Notify App へようこそ 🎉
