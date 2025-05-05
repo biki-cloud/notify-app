@@ -6,15 +6,15 @@ const GOALS_FILE = path.resolve(process.cwd(), "goals.json");
 
 // 保存API
 export async function POST(req: NextRequest) {
-  const { userId, importantThing, goal } = await req.json();
+  const { userId, habit, goal } = await req.json();
   if (!userId)
     return NextResponse.json({ error: "userId required" }, { status: 400 });
-  let data: Record<string, { importantThing: string; goal: string }> = {};
+  let data: Record<string, { habit: string; goal: string }> = {};
   try {
     const file = await fs.readFile(GOALS_FILE, "utf-8");
     data = JSON.parse(file);
   } catch {}
-  data[userId] = { importantThing, goal };
+  data[userId] = { habit, goal };
   await fs.writeFile(GOALS_FILE, JSON.stringify(data, null, 2));
   return NextResponse.json({ ok: true });
 }
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("userId");
   if (!userId)
     return NextResponse.json({ error: "userId required" }, { status: 400 });
-  let data: Record<string, { importantThing: string; goal: string }> = {};
+  let data: Record<string, { habit: string; goal: string }> = {};
   try {
     const file = await fs.readFile(GOALS_FILE, "utf-8");
     data = JSON.parse(file);

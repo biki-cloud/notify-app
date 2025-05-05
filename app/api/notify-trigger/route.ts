@@ -59,12 +59,16 @@ export async function POST() {
           let recentRecords: { date: string; mood: string[]; diary: string }[] =
             [];
           let userGoal = "";
+          let userHabit = "";
           try {
             // 目標データの取得
             const goalsData = await fs.readFile(GOALS_FILE, "utf-8");
             const goals = JSON.parse(goalsData);
             if (userId && goals[userId] && goals[userId].goal) {
               userGoal = goals[userId].goal;
+            }
+            if (userId && goals[userId] && goals[userId].habit) {
+              userHabit = goals[userId].habit;
             }
           } catch {}
           try {
@@ -103,6 +107,9 @@ export async function POST() {
             if (userGoal) {
               content += `\n\n【現在の目標】\n${userGoal}`;
             }
+            if (userHabit) {
+              content += `\n\n【現在の習慣】\n${userHabit}`;
+            }
             try {
               const openaiRes = await fetch(
                 "https://api.openai.com/v1/chat/completions",
@@ -118,7 +125,7 @@ export async function POST() {
                       {
                         role: "system",
                         content:
-                          "あなたは『アイシールド21』の蛭間陽一のような口調で、ユーザーを悪魔的コーチングで励ます役です。\n\n以下はユーザーの直近3件の気分と日記、そして現在の目標です。日記の内容を中心に励ましつつ、目標達成に向けたアドバイスや進捗確認も一言添えてください。蛭間陽一は「クソ(名詞)」と「〜しやがれ」と「テメー」と「〜っきゃねえ」と「〜ぜ」という口調が特徴です。制限文字は300文字です。\n\n",
+                          "あなたは『アイシールド21』の蛭間陽一のような口調で、ユーザーを悪魔的コーチングで励ます役です。\n\n以下はユーザーの直近3件の気分と日記、そして現在の目標と習慣です。日記の内容を中心に励ましつつ、目標や習慣の達成に向けたアドバイスや進捗確認も一言添えてください。蛭間陽一は「クソ(名詞)」と「〜しやがれ」と「テメー」と「〜っきゃねえ」と「〜ぜ」という口調が特徴です。制限文字は300文字です。\n\n",
                       },
                       { role: "user", content },
                     ],
