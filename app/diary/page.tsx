@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { moodEmoji } from "../emojiList";
 import DiaryClient from "./DiaryClient";
+import TodayRecordForm from "../components/TodayRecordForm";
 
 // ユーザーIDは現状1つのみと仮定
 const USER_ID = "3ccee381-9aab-4a26-9ca6-251c395cd68e";
@@ -68,6 +69,7 @@ export default async function DiaryPage() {
 
   return (
     <main style={{ maxWidth: 600, margin: "40px auto", padding: 16 }}>
+      <TodayRecordForm />
       <DiaryClient />
       <h1 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 24 }}>
         日記の振り返り
