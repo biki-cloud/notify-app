@@ -17,6 +17,7 @@ const SUBS_FILE = path.resolve(process.cwd(), "subscriptions.json");
 const USER_SETTINGS_FILE = path.resolve(process.cwd(), "user-settings.json");
 const RECORD_FILE = path.resolve(process.cwd(), "record.json");
 const AI_LOG_FILE = path.resolve(process.cwd(), "ai_log.json");
+const GOALS_FILE = path.resolve(process.cwd(), "goals.json");
 
 webpush.setVapidDetails(
   "mailto:example@example.com",
@@ -57,6 +58,15 @@ export async function POST() {
           // ユーザーの最新3件の記録を取得
           let recentRecords: { date: string; mood: string[]; diary: string }[] =
             [];
+          let userGoal = "";
+          try {
+            // 目標データの取得
+            const goalsData = await fs.readFile(GOALS_FILE, "utf-8");
+            const goals = JSON.parse(goalsData);
+            if (userId && goals[userId] && goals[userId].goal) {
+              userGoal = goals[userId].goal;
+            }
+          } catch {}
           try {
             const recordData = await fs.readFile(RECORD_FILE, "utf-8");
             const records = JSON.parse(recordData);
@@ -81,7 +91,7 @@ export async function POST() {
             recentRecords = sorted;
           } catch {}
           if (recentRecords.length > 0) {
-            // OpenAI APIに3日分の記録内容を投げてコーチングメッセージを生成
+            // OpenAI APIに3日分の記録内容＋目標を投げてコーチングメッセージを生成
             content = recentRecords
               .map(
                 (rec, i) =>
@@ -90,6 +100,9 @@ export async function POST() {
                   }\n日記: ${rec.diary}`
               )
               .join("\n\n");
+            if (userGoal) {
+              content += `\n\n【現在の目標】\n${userGoal}`;
+            }
             try {
               const openaiRes = await fetch(
                 "https://api.openai.com/v1/chat/completions",
@@ -105,11 +118,11 @@ export async function POST() {
                       {
                         role: "system",
                         content:
-                          "あなたは『アイシールド21』の蛭間陽一のような口調で、ユーザーを悪魔的コーチングで励ます役です\n\n以下はユーザーの直近3件の気分と日記です。蛭間陽一は「クソ(名詞)」と「〜しやがれ」と「テメー」と「〜っきゃねえ」と「〜ぜ」という口調が特徴です。制限文字は150文字です。\n\n",
+                          "あなたは『アイシールド21』の蛭間陽一のような口調で、ユーザーを悪魔的コーチングで励ます役です。\n\n以下はユーザーの直近3件の気分と日記、そして現在の目標です。日記の内容を中心に励ましつつ、目標達成に向けたアドバイスや進捗確認も一言添えてください。蛭間陽一は「クソ(名詞)」と「〜しやがれ」と「テメー」と「〜っきゃねえ」と「〜ぜ」という口調が特徴です。制限文字は300文字です。\n\n",
                       },
                       { role: "user", content },
                     ],
-                    max_tokens: 200,
+                    max_tokens: 300,
                     temperature: 0.9,
                   }),
                 }
