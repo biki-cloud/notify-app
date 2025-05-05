@@ -97,20 +97,49 @@ export default async function DiaryReviewPage() {
                   ))}
                 </span>
               ) : (
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    marginRight: 12,
-                    color: "#223366",
-                  }}
-                >
-                  AIコーチング
-                </span>
+                <>
+                  <img
+                    src="/coach.png"
+                    alt="AIコーチ"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      marginRight: 12,
+                      border: "2px solid #b3aaff",
+                      background: "#fff",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontWeight: "bold",
+                      marginRight: 12,
+                      color: "#223366",
+                    }}
+                  >
+                    ヒル魔
+                  </span>
+                </>
               )}
               <span style={{ color: "#888", fontSize: 13 }}>{item.time}</span>
             </div>
-            <div style={{ marginBottom: 12, whiteSpace: "pre-line" }}>
-              {item.text}
+            <div
+              style={{
+                marginBottom: 12,
+                whiteSpace: "pre-line",
+                display: "flex",
+                alignItems: "flex-start",
+              }}
+            >
+              {item.type === "ai" ? (
+                <>
+                  <div style={{ width: 40, minWidth: 40, marginRight: 12 }} />
+                  <div>{item.text}</div>
+                </>
+              ) : (
+                item.text
+              )}
             </div>
           </li>
         ))}
