@@ -193,7 +193,7 @@ export default function SettingsPage() {
       </section>
 
       {/* 既存の通知設定UI */}
-      <div className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6">
+      <div className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6 mb-8">
         <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">
           通知設定
         </h2>

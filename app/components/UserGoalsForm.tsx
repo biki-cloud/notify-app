@@ -50,22 +50,22 @@ export default function UserGoalsForm() {
       </h2>
       <div className="mb-4">
         <label className="block font-bold mb-1">大切にしていること</label>
-        <input
-          type="text"
+        <textarea
           className="border rounded px-2 py-1 w-full"
           value={importantThing}
           onChange={(e) => setImportantThing(e.target.value)}
           placeholder="例：健康、家族、挑戦"
+          rows={6}
         />
       </div>
       <div className="mb-4">
         <label className="block font-bold mb-1">目標</label>
-        <input
-          type="text"
+        <textarea
           className="border rounded px-2 py-1 w-full"
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
           placeholder="例：毎日10分運動する"
+          rows={6}
         />
       </div>
       <button
