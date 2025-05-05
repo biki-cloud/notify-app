@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { EMOJI_LIST } from "./emojiList";
+import UserGoalsForm from "./components/UserGoalsForm";
 
 export default function Home() {
   const [mood, setMood] = useState<string[]>([]);
@@ -174,6 +175,7 @@ export default function Home() {
             </div>
           )}
         </section>
+        <UserGoalsForm />
       </main>
 
       <footer className="w-full py-6 flex flex-col items-center gap-2 text-xs text-gray-500 dark:text-gray-400 bg-transparent mt-8">
