@@ -11,3 +11,11 @@ export const records = schema.table("records", {
   mood: jsonb("mood").notNull(), // string[]
   diary: text("diary").notNull(),
 });
+
+// 目標・習慣テーブル
+export const goals = schema.table("goals", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id", { length: 64 }).notNull(),
+  habit: text("habit").notNull(),
+  goal: text("goal").notNull(),
+});
