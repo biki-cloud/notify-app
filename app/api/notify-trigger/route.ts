@@ -50,12 +50,14 @@ export async function POST() {
         } else if (setting.type === "ai") {
           let content = "";
           // ユーザーの最新3件の記録を取得
-          let recentRecords: { date: string; mood: string[]; diary: string }[] =
-            [];
           let userGoal = "";
           let userHabit = "";
+          let recentRecords: { date: string; mood: string[]; diary: string }[] =
+            [];
           let totalCostStr = "-";
-          try {
+
+          if (userId) {
+            // goals
             const goalRows = await db
               .select()
               .from(goals)
@@ -66,13 +68,12 @@ export async function POST() {
               userGoal = goalRow.goal;
               userHabit = goalRow.habit;
             }
-          } catch {}
-          try {
+
+            // records
             const recordRows = await db
               .select()
               .from(records)
               .where(eq(records.user_id, userId));
-            // 日付で降順ソートし、直近3件を取得
             const sorted = recordRows
               .sort((a, b) => b.date.localeCompare(a.date))
               .slice(0, 3)
@@ -86,7 +87,7 @@ export async function POST() {
                 diary: rec.diary,
               }));
             recentRecords = sorted;
-          } catch {}
+          }
           if (recentRecords.length > 0) {
             // OpenAI APIに3日分の記録内容＋目標を投げてコーチングメッセージを生成
             content = recentRecords
@@ -176,7 +177,12 @@ export async function POST() {
         title: "PWAプッシュ通知",
         body,
       });
-      const result = await webpush.sendNotification(sub, payload);
+      const keys = sub.keys as { p256dh: string; auth: string };
+      const pushSub = {
+        endpoint: sub.endpoint,
+        keys,
+      };
+      const result = await webpush.sendNotification(pushSub, payload);
       return result;
     })
   );
