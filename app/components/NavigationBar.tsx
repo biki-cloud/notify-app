@@ -2,9 +2,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaBookOpen } from "react-icons/fa";
+import { useEffect, useState } from "react";
 
 export default function NavigationBar() {
   const pathname = usePathname();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setUserId(localStorage.getItem("userId"));
+    }
+  }, []);
+
   return (
     <nav className="w-full h-16 flex items-center justify-between px-6 bg-white/90 dark:bg-gray-900/80 shadow-md fixed top-0 left-0 z-20">
       <div className="text-xl font-bold tracking-tight text-blue-700 dark:text-blue-300 flex items-center gap-2">
@@ -19,7 +28,7 @@ export default function NavigationBar() {
           <FaBookOpen className="inline-block mb-1" /> Notify App
         </Link>
       </div>
-      <div className="flex gap-6 text-base font-semibold">
+      <div className="flex gap-6 text-base font-semibold items-center">
         <Link
           href="/"
           className={`hover:text-blue-600 transition ${
@@ -70,6 +79,35 @@ export default function NavigationBar() {
         >
           設定
         </Link>
+        {/* ログイン状態で表示切替 */}
+        {userId ? (
+          <span className="ml-4 text-sm text-gray-600 dark:text-gray-300">
+            {userId} さんでログイン中
+          </span>
+        ) : (
+          <>
+            <Link
+              href="/login"
+              className={`hover:text-green-600 transition ${
+                pathname === "/login"
+                  ? "text-green-600 border-b-2 border-green-600 pb-1"
+                  : "text-gray-700 dark:text-gray-200"
+              }`}
+            >
+              ログイン
+            </Link>
+            <Link
+              href="/register"
+              className={`hover:text-orange-600 transition ${
+                pathname === "/register"
+                  ? "text-orange-600 border-b-2 border-orange-600 pb-1"
+                  : "text-gray-700 dark:text-gray-200"
+              }`}
+            >
+              新規登録
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );
