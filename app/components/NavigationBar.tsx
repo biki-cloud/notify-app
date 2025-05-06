@@ -81,9 +81,22 @@ export default function NavigationBar() {
         </Link>
         {/* ログイン状態で表示切替 */}
         {userId ? (
-          <span className="ml-4 text-sm text-gray-600 dark:text-gray-300">
-            {userId} さんでログイン中
-          </span>
+          <>
+            <span className="ml-4 text-sm text-gray-600 dark:text-gray-300">
+              {userId} さんでログイン中
+            </span>
+            <button
+              onClick={() => {
+                localStorage.removeItem("userId");
+                setUserId(null);
+                window.location.href = "/";
+              }}
+              className="ml-4 px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-red-200 hover:text-red-700 transition border border-gray-300 dark:border-gray-600"
+              type="button"
+            >
+              サインアウト
+            </button>
+          </>
         ) : (
           <>
             <Link
