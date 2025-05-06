@@ -1,25 +1,14 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import webpush from "web-push";
 import { db } from "../../../drizzle/db";
-import { ai_logs } from "../../../drizzle/schema";
-// import type { PushSubscription } from "web-push";
-type PushSubscription = {
-  endpoint: string;
-  expirationTime: number | null;
-  keys: {
-    p256dh: string;
-    auth: string;
-  };
-  userId?: string;
-};
-
-const SUBS_FILE = path.resolve(process.cwd(), "subscriptions.json");
-const USER_SETTINGS_FILE = path.resolve(process.cwd(), "user-settings.json");
-const RECORD_FILE = path.resolve(process.cwd(), "record.json");
-const AI_LOG_FILE = path.resolve(process.cwd(), "ai_log.json");
-const GOALS_FILE = path.resolve(process.cwd(), "goals.json");
+import {
+  ai_logs,
+  user_settings,
+  goals,
+  records,
+  subscriptions,
+} from "../../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 webpush.setVapidDetails(
   "mailto:example@example.com",
@@ -34,23 +23,26 @@ function getJSTISOString() {
 }
 
 export async function POST() {
-  let subs: PushSubscription[] = [];
-  try {
-    const data = await fs.readFile(SUBS_FILE, "utf-8");
-    subs = JSON.parse(data);
-  } catch {}
+  // Push購読情報をDBから取得
+  const subs = await db.select().from(subscriptions);
 
+  // ユーザー設定をDBから取得
   let userSettings: Record<string, { type: string; customMessage: string }> =
     {};
   try {
-    const data = await fs.readFile(USER_SETTINGS_FILE, "utf-8");
-    userSettings = JSON.parse(data);
+    const settingsRows = await db.select().from(user_settings);
+    userSettings = Object.fromEntries(
+      settingsRows.map((row) => [
+        row.user_id,
+        { type: row.type, customMessage: row.custom_message },
+      ])
+    );
   } catch {}
 
   const results = await Promise.allSettled(
     subs.map(async (sub) => {
       let body = "APIからの通知";
-      const userId = sub.userId;
+      const userId = sub.user_id;
       const setting = userId ? userSettings[userId] : undefined;
       if (setting) {
         if (setting.type === "custom" && setting.customMessage) {
@@ -64,30 +56,28 @@ export async function POST() {
           let userHabit = "";
           let totalCostStr = "-";
           try {
-            // 目標データの取得
-            const goalsData = await fs.readFile(GOALS_FILE, "utf-8");
-            const goals = JSON.parse(goalsData);
-            if (userId && goals[userId] && goals[userId].goal) {
-              userGoal = goals[userId].goal;
-            }
-            if (userId && goals[userId] && goals[userId].habit) {
-              userHabit = goals[userId].habit;
+            const goalRows = await db
+              .select()
+              .from(goals)
+              .where(eq(goals.user_id, userId))
+              .limit(1);
+            const goalRow = goalRows[0];
+            if (goalRow) {
+              userGoal = goalRow.goal;
+              userHabit = goalRow.habit;
             }
           } catch {}
           try {
-            const recordData = await fs.readFile(RECORD_FILE, "utf-8");
-            const records = JSON.parse(recordData);
-            let userRecords: Record<string, { mood: string; diary: string }> =
-              {};
-            if (userId && records[userId]) {
-              userRecords = records[userId];
-            }
+            const recordRows = await db
+              .select()
+              .from(records)
+              .where(eq(records.user_id, userId));
             // 日付で降順ソートし、直近3件を取得
-            const sorted = Object.entries(userRecords)
-              .sort(([a], [b]) => b.localeCompare(a))
+            const sorted = recordRows
+              .sort((a, b) => b.date.localeCompare(a.date))
               .slice(0, 3)
-              .map(([date, rec]) => ({
-                date,
+              .map((rec) => ({
+                date: rec.date,
                 mood: Array.isArray(rec.mood)
                   ? rec.mood
                   : rec.mood

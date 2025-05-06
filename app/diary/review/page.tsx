@@ -1,55 +1,42 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { db } from "../../../drizzle/db";
+import { records, ai_logs } from "../../../drizzle/schema";
 import { moodEmoji } from "../../emojiList";
 import DiaryClient from "../DiaryClient";
+import { desc, eq } from "drizzle-orm";
 
 // ユーザーIDは現状1つのみと仮定
 const USER_ID = "3ccee381-9aab-4a26-9ca6-251c395cd68e";
 
 export default async function DiaryReviewPage() {
-  // record.jsonを読み込む
-  const recordPath = path.resolve(process.cwd(), "record.json");
-  const recordRaw = await fs.readFile(recordPath, "utf-8");
-  const record: Record<
-    string,
-    Record<string, { mood: string[]; diary: string }>
-  > = JSON.parse(recordRaw);
-  const userRecords = record[USER_ID] || {};
-
-  // 日記エントリを展開
-  const diaryItems = Object.entries(userRecords).map(([time, value]) => ({
-    time,
-    mood: Array.isArray(value.mood)
-      ? value.mood
-      : value.mood
-      ? [value.mood]
-      : [],
-    text: value.diary,
+  // DBから記録を取得
+  const recordRows = await db
+    .select()
+    .from(records)
+    .where(eq(records.user_id, USER_ID))
+    .orderBy(desc(records.date));
+  const userRecords = recordRows.map((row) => ({
+    time: row.date,
+    mood: Array.isArray(row.mood) ? row.mood : row.mood ? [row.mood] : [],
+    text: row.diary,
   }));
 
-  // 新しい順にソート
-  diaryItems.sort((a, b) => b.time.localeCompare(a.time));
-
   // timeとtextで重複排除
-  const uniqueDiaryItems = diaryItems.filter(
+  const uniqueDiaryItems = userRecords.filter(
     (item, idx, self) =>
       self.findIndex((v) => v.time === item.time && v.text === item.text) ===
       idx
   );
 
-  // ai_log.jsonからAIコーチング内容を取得
-  const aiLogPath = path.resolve(process.cwd(), "ai_log.json");
-  let aiEntries: { timestamp: string; response: string }[] = [];
-  try {
-    const aiLogRaw = await fs.readFile(aiLogPath, "utf-8");
-    const aiLog = JSON.parse(aiLogRaw);
-    aiEntries = (aiLog[USER_ID] || []).map(
-      (entry: { timestamp: string; response: string }) => ({
-        timestamp: entry.timestamp,
-        response: entry.response,
-      })
-    );
-  } catch {}
+  // DBからAIコーチング内容を取得
+  const aiLogRows = await db
+    .select()
+    .from(ai_logs)
+    .where(eq(ai_logs.user_id, USER_ID))
+    .orderBy(desc(ai_logs.timestamp));
+  const aiEntries = aiLogRows.map((entry) => ({
+    timestamp: entry.timestamp,
+    response: entry.response,
+  }));
 
   // recordとai_logを統合して時系列順に並べる
   const mergedItems = [
