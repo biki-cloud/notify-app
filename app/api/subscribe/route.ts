@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
+import { db } from "../../../drizzle/db";
+import { subscriptions } from "../../../drizzle/schema";
+import { eq } from "drizzle-orm";
 // import type { PushSubscription } from "web-push";
 type PushSubscription = {
   endpoint: string;
@@ -9,22 +10,23 @@ type PushSubscription = {
     p256dh: string;
     auth: string;
   };
+  userId?: string;
 };
 
-const SUBS_FILE = path.resolve(process.cwd(), "subscriptions.json");
-
 export async function POST(req: NextRequest) {
-  const subscription = await req.json();
-  let subs: (PushSubscription & { userId?: string })[] = [];
-  try {
-    const data = await fs.readFile(SUBS_FILE, "utf-8");
-    subs = JSON.parse(data);
-  } catch {}
+  const subscription: PushSubscription = await req.json();
   // 重複登録防止
-  if (!subs.find((s) => s.endpoint === subscription.endpoint)) {
-    // userIdを含めて保存
-    subs.push({ ...subscription });
-    await fs.writeFile(SUBS_FILE, JSON.stringify(subs, null, 2));
+  const existing = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.endpoint, subscription.endpoint))
+    .limit(1);
+  if (existing.length === 0) {
+    await db.insert(subscriptions).values({
+      endpoint: subscription.endpoint,
+      user_id: subscription.userId || null,
+      keys: subscription.keys,
+    });
   }
   return NextResponse.json({ ok: true });
 }

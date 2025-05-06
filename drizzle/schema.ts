@@ -27,3 +27,11 @@ export const user_settings = schema.table("user_settings", {
   type: varchar("type", { length: 32 }).notNull(),
   custom_message: text("custom_message").notNull(),
 });
+
+// Push通知購読テーブル
+export const subscriptions = schema.table("subscriptions", {
+  id: serial("id").primaryKey(),
+  endpoint: text("endpoint").notNull().unique(),
+  user_id: varchar("user_id", { length: 64 }),
+  keys: jsonb("keys").notNull(), // {p256dh, auth}
+});

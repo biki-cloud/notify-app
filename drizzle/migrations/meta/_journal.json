@@ -22,6 +22,13 @@
       "when": 1746490507670,
       "tag": "0002_strong_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746490617529,
+      "tag": "0003_deep_gateway",
+      "breakpoints": true
     }
   ]
 }
