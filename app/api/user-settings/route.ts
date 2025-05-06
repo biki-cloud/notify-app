@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
-
-const USER_SETTINGS_FILE = path.resolve(process.cwd(), "user-settings.json");
+import { db } from "../../../drizzle/db";
+import { user_settings } from "../../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 // 設定保存API
 export async function POST(req: NextRequest) {
   const { userId, type, customMessage } = await req.json();
   if (!userId)
     return NextResponse.json({ error: "userId required" }, { status: 400 });
-  let settings: Record<string, { type: string; customMessage: string }> = {};
-  try {
-    const data = await fs.readFile(USER_SETTINGS_FILE, "utf-8");
-    settings = JSON.parse(data);
-  } catch {}
-  settings[userId] = { type, customMessage };
-  await fs.writeFile(USER_SETTINGS_FILE, JSON.stringify(settings, null, 2));
+  // 既存レコードがあればUPDATE、なければINSERT
+  const existing = await db
+    .select()
+    .from(user_settings)
+    .where(eq(user_settings.user_id, userId))
+    .limit(1);
+  if (existing.length > 0) {
+    await db
+      .update(user_settings)
+      .set({ type, custom_message: customMessage })
+      .where(eq(user_settings.user_id, userId));
+  } else {
+    await db
+      .insert(user_settings)
+      .values({ user_id: userId, type, custom_message: customMessage });
+  }
   return NextResponse.json({ ok: true });
 }
 
@@ -25,10 +33,15 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("userId");
   if (!userId)
     return NextResponse.json({ error: "userId required" }, { status: 400 });
-  let settings: Record<string, { type: string; customMessage: string }> = {};
-  try {
-    const data = await fs.readFile(USER_SETTINGS_FILE, "utf-8");
-    settings = JSON.parse(data);
-  } catch {}
-  return NextResponse.json(settings[userId] || {});
+  const result = await db
+    .select()
+    .from(user_settings)
+    .where(eq(user_settings.user_id, userId))
+    .limit(1);
+  if (result.length > 0) {
+    const { type, custom_message } = result[0];
+    return NextResponse.json({ type, customMessage: custom_message });
+  } else {
+    return NextResponse.json({});
+  }
 }

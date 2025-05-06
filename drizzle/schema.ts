@@ -19,3 +19,11 @@ export const goals = schema.table("goals", {
   habit: text("habit").notNull(),
   goal: text("goal").notNull(),
 });
+
+// ユーザー設定テーブル
+export const user_settings = schema.table("user_settings", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id", { length: 64 }).notNull(),
+  type: varchar("type", { length: 32 }).notNull(),
+  custom_message: text("custom_message").notNull(),
+});
