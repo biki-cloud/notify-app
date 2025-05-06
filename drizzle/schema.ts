@@ -35,3 +35,13 @@ export const subscriptions = schema.table("subscriptions", {
   user_id: varchar("user_id", { length: 64 }),
   keys: jsonb("keys").notNull(), // {p256dh, auth}
 });
+
+// AIログテーブル
+export const ai_logs = schema.table("ai_logs", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id", { length: 64 }).notNull(),
+  timestamp: varchar("timestamp", { length: 32 }).notNull(),
+  prompt: text("prompt").notNull(),
+  response: text("response").notNull(),
+  total_cost_jp_en: varchar("total_cost_jp_en", { length: 64 }).notNull(),
+});

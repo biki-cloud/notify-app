@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import webpush from "web-push";
+import { db } from "../../../drizzle/db";
+import { ai_logs } from "../../../drizzle/schema";
 // import type { PushSubscription } from "web-push";
 type PushSubscription = {
   endpoint: string;
@@ -164,28 +166,15 @@ export async function POST() {
             // AIログ保存
             if (userId) {
               try {
-                const aiLogData = await fs.readFile(AI_LOG_FILE, "utf-8");
-                const aiLog: Record<string, unknown[]> = JSON.parse(aiLogData);
-                if (!aiLog[userId]) aiLog[userId] = [];
-                aiLog[userId].push({
+                await db.insert(ai_logs).values({
+                  user_id: userId,
                   timestamp: getJSTISOString(),
                   prompt: content,
                   response: body,
                   total_cost_jp_en: totalCostStr,
                 });
-                await fs.writeFile(AI_LOG_FILE, JSON.stringify(aiLog, null, 2));
-              } catch {
-                // ファイルがない場合など
-                const aiLog: Record<string, unknown[]> = {};
-                aiLog[userId] = [
-                  {
-                    timestamp: getJSTISOString(),
-                    prompt: content,
-                    response: body,
-                    total_cost_jp_en: totalCostStr,
-                  },
-                ];
-                await fs.writeFile(AI_LOG_FILE, JSON.stringify(aiLog, null, 2));
+              } catch (e) {
+                console.error("AIログDB保存エラー", e);
               }
             }
           } else {
