@@ -110,7 +110,7 @@ export default function SettingsPage() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
-    const userId = localStorage.getItem("notify_user_id");
+    const userId = localStorage.getItem("userId");
     await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
