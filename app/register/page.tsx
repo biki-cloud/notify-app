@@ -17,7 +17,7 @@ export default function RegisterPage() {
     });
     const data = await res.json();
     if (data.ok) {
-      localStorage.setItem("userId", username);
+      localStorage.setItem("userId", String(data.userId));
       router.push("/login");
     } else {
       setError(data.error || "登録失敗");

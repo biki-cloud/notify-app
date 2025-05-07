@@ -8,7 +8,7 @@ export default function UserGoalsForm() {
   const [loading, setLoading] = useState(false);
   const userId =
     typeof window !== "undefined"
-      ? localStorage.getItem("notify_user_id") || "demo_user"
+      ? localStorage.getItem("userId") || "demo_user"
       : "demo_user";
 
   // 既存データ取得

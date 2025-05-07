@@ -22,7 +22,7 @@ export default function LoginPage() {
     });
     const data = await res.json();
     if (data.ok) {
-      localStorage.setItem("userId", username);
+      localStorage.setItem("userId", String(data.userId));
       router.push("/");
     } else {
       setError(data.error || "ログイン失敗");
