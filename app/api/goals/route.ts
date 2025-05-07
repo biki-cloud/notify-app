@@ -31,10 +31,11 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("userId");
   if (!userId)
     return NextResponse.json({ error: "userId required" }, { status: 400 });
+  const userIdNum = typeof userId === "string" ? Number(userId) : userId;
   const result = await db
     .select()
     .from(goals)
-    .where(eq(goals.user_id, userId))
+    .where(eq(goals.user_id, userIdNum))
     .limit(1);
   if (result.length > 0) {
     const { habit, goal } = result[0];
