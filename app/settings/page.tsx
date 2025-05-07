@@ -2,22 +2,22 @@
 import { useEffect, useState } from "react";
 
 const SETTINGS_KEY = "notify_settings";
-const USERNAME_KEY = "notify_username";
+const USERID_KEY = "userId";
 
 export default function SettingsPage() {
-  const [username, setUsername] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [type, setType] = useState<"ai" | "custom">("ai");
   const [customMessage, setCustomMessage] = useState("");
   const [saved, setSaved] = useState(false);
 
-  // ユーザー名の管理
+  // ユーザーIDの管理
   useEffect(() => {
-    let name = localStorage.getItem(USERNAME_KEY);
-    if (!name) {
-      name = "guest";
-      localStorage.setItem(USERNAME_KEY, name);
+    let id = localStorage.getItem(USERID_KEY);
+    if (!id) {
+      id = "guest";
+      localStorage.setItem(USERID_KEY, id);
     }
-    setUsername(name);
+    setUserId(id);
   }, []);
 
   // 設定の読み込み
@@ -37,11 +37,11 @@ export default function SettingsPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     // サーバーにも保存
-    if (username) {
+    if (userId) {
       await fetch("/api/user-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: username, type, customMessage }),
+        body: JSON.stringify({ userId, type, customMessage }),
       });
     }
   };
@@ -110,7 +110,7 @@ export default function SettingsPage() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
-    const userId = localStorage.getItem("userId");
+    const userId = localStorage.getItem(USERID_KEY);
     await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -237,7 +237,7 @@ export default function SettingsPage() {
           保存
         </button>
         {saved && <div className="text-green-700 mt-3">保存しました</div>}
-        <div className="mt-8 text-xs text-gray-500">ユーザー名: {username}</div>
+        <div className="mt-8 text-xs text-gray-500">ユーザーID: {userId}</div>
       </div>
     </div>
   );
