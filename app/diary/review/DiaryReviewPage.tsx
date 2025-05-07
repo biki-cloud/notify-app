@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { db } from "../../../drizzle/db";
 import { records, ai_logs } from "../../../drizzle/schema";
 import { moodEmoji } from "../../emojiList";
