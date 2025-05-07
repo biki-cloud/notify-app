@@ -3,8 +3,21 @@ import { useEffect, useState } from "react";
 import DiaryClient from "../DiaryClient";
 import { moodEmoji } from "../../emojiList";
 
+type DiaryItem = {
+  type: "diary";
+  time: string;
+  mood: string[];
+  text: string;
+};
+type AiItem = {
+  type: "ai";
+  time: string;
+  text: string;
+};
+type Item = DiaryItem | AiItem;
+
 export default function DiaryReviewPage({ userId }: { userId: number }) {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 

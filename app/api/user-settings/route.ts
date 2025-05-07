@@ -33,10 +33,11 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("userId");
   if (!userId)
     return NextResponse.json({ error: "userId required" }, { status: 400 });
+  const userIdNum = typeof userId === "string" ? Number(userId) : userId;
   const result = await db
     .select()
     .from(notify_settings)
-    .where(eq(notify_settings.user_id, userId))
+    .where(eq(notify_settings.user_id, userIdNum))
     .limit(1);
   if (result.length > 0) {
     const { type, custom_message } = result[0];
