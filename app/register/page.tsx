@@ -18,6 +18,12 @@ export default function RegisterPage() {
     const data = await res.json();
     if (data.ok) {
       localStorage.setItem("userId", String(data.userId));
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "userId",
+          newValue: String(data.userId),
+        })
+      );
       router.push("/login");
     } else {
       setError(data.error || "登録失敗");

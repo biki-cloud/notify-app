@@ -23,6 +23,12 @@ export default function LoginPage() {
     const data = await res.json();
     if (data.ok) {
       localStorage.setItem("userId", String(data.userId));
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "userId",
+          newValue: String(data.userId),
+        })
+      );
       router.push("/");
     } else {
       setError(data.error || "ログイン失敗");

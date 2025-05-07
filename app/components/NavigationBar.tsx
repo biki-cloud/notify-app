@@ -11,6 +11,15 @@ export default function NavigationBar() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       setUserId(localStorage.getItem("userId"));
+      const handleStorage = (e: StorageEvent) => {
+        if (e.key === "userId") {
+          setUserId(e.newValue);
+        }
+      };
+      window.addEventListener("storage", handleStorage);
+      return () => {
+        window.removeEventListener("storage", handleStorage);
+      };
     }
   }, []);
 
