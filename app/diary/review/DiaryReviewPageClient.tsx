@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import DiaryReviewPage from "./DiaryReviewPage";
+import RequireLogin from "../../components/RequireLogin";
 
 export default function DiaryReviewPageClient() {
   const [userId, setUserId] = useState<number | null>(null);
@@ -10,7 +11,10 @@ export default function DiaryReviewPageClient() {
     if (id) setUserId(Number(id));
   }, []);
 
-  if (!userId) return <div>ログインしてください</div>;
-
-  return <DiaryReviewPage userId={userId} />;
+  return (
+    <>
+      <RequireLogin />
+      {userId && <DiaryReviewPage userId={userId} />}
+    </>
+  );
 }
