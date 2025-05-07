@@ -13,12 +13,8 @@ export default function SettingsPage() {
 
   // ユーザーIDの管理
   useEffect(() => {
-    let id = localStorage.getItem(USERID_KEY);
-    if (!id) {
-      id = "guest";
-      localStorage.setItem(USERID_KEY, id);
-    }
-    setUserId(id);
+    const id = localStorage.getItem(USERID_KEY);
+    setUserId(id); // guestはセットしない
   }, []);
 
   // 設定の読み込み
@@ -33,18 +29,17 @@ export default function SettingsPage() {
 
   // 設定の保存
   const handleSave = async () => {
+    if (!userId) return; // userIdがなければ何もしない
     const settings = { type, customMessage };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     // サーバーにも保存
-    if (userId) {
-      await fetch("/api/user-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, type, customMessage }),
-      });
-    }
+    await fetch("/api/user-settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type, customMessage }),
+    });
   };
 
   // --- 通知送信UI用 state & 関数 ---
@@ -100,7 +95,7 @@ export default function SettingsPage() {
 
   // サブスクリプション登録
   const subscribePush = async () => {
-    if (!("serviceWorker" in navigator) || !vapidKey) return;
+    if (!("serviceWorker" in navigator) || !vapidKey || !userId) return;
     const reg = await navigator.serviceWorker.ready;
     // 既存購読があれば解除
     const existing = await reg.pushManager.getSubscription();
@@ -111,7 +106,6 @@ export default function SettingsPage() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
-    const userId = localStorage.getItem(USERID_KEY);
     await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
