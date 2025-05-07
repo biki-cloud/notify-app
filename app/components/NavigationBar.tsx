@@ -86,7 +86,8 @@ export default function NavigationBar() {
               {userId} さんでログイン中
             </span>
             <button
-              onClick={() => {
+              onClick={async () => {
+                await fetch("/api/logout", { method: "POST" });
                 localStorage.removeItem("userId");
                 setUserId(null);
                 window.location.href = "/";

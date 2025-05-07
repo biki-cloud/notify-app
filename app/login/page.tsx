@@ -7,14 +7,26 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!userId) {
       setError("ユーザIDを入力してください");
       return;
     }
-    localStorage.setItem("userId", userId);
-    router.push("/");
+    // DBにユーザーが存在するか確認
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      localStorage.setItem("userId", userId);
+      router.push("/");
+    } else {
+      setError(data.error || "ログイン失敗");
+    }
   };
 
   return (
