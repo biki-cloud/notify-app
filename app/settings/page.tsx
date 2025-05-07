@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import RequireLogin from "../components/RequireLogin";
 
-const SETTINGS_KEY = "notify_settings";
 const USERID_KEY = "userId";
 
 export default function SettingsPage() {
@@ -14,27 +13,25 @@ export default function SettingsPage() {
   // ユーザーIDの管理
   useEffect(() => {
     const id = localStorage.getItem(USERID_KEY);
-    setUserId(id); // guestはセットしない
+    setUserId(id);
   }, []);
 
-  // 設定の読み込み
+  // 設定の取得（API経由）
   useEffect(() => {
-    const settings = localStorage.getItem(SETTINGS_KEY);
-    if (settings) {
-      const parsed = JSON.parse(settings);
-      setType(parsed.type || "ai");
-      setCustomMessage(parsed.customMessage || "");
-    }
-  }, []);
+    if (!userId) return;
+    fetch(`/api/user-settings?userId=${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.type) setType(data.type);
+        if (data.customMessage) setCustomMessage(data.customMessage);
+      });
+  }, [userId]);
 
   // 設定の保存
   const handleSave = async () => {
-    if (!userId) return; // userIdがなければ何もしない
-    const settings = { type, customMessage };
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    if (!userId) return;
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
-    // サーバーにも保存
     await fetch("/api/user-settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
