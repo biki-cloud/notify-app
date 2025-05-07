@@ -135,8 +135,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
-      <RequireLogin />
+    <RequireLogin>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center py-10">
         {/* 通知送信UI */}
         <section className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6 mb-8">
@@ -243,6 +242,6 @@ export default function SettingsPage() {
           <div className="mt-8 text-xs text-gray-500">ユーザーID: {userId}</div>
         </div>
       </div>
-    </>
+    </RequireLogin>
   );
 }

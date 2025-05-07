@@ -12,9 +12,6 @@ export default function DiaryReviewPageClient() {
   }, []);
 
   return (
-    <>
-      <RequireLogin />
-      {userId && <DiaryReviewPage userId={userId} />}
-    </>
+    <RequireLogin>{userId && <DiaryReviewPage userId={userId} />}</RequireLogin>
   );
 }
