@@ -1,55 +1,29 @@
-export const runtime = "nodejs";
-import { db } from "../../../drizzle/db";
-import { records, ai_logs } from "../../../drizzle/schema";
-import { moodEmoji } from "../../emojiList";
+"use client";
+import { useEffect, useState } from "react";
 import DiaryClient from "../DiaryClient";
-import { desc, eq } from "drizzle-orm";
+import { moodEmoji } from "../../emojiList";
 
-export default async function DiaryReviewPage({ userId }: { userId: number }) {
-  // DBから記録を取得
-  const recordRows = await db
-    .select()
-    .from(records)
-    .where(eq(records.user_id, userId))
-    .orderBy(desc(records.date));
-  const userRecords = recordRows.map((row) => ({
-    time: row.date,
-    mood: Array.isArray(row.mood) ? row.mood : row.mood ? [row.mood] : [],
-    text: row.diary,
-  }));
+export default function DiaryReviewPage({ userId }: { userId: number }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // timeとtextで重複排除
-  const uniqueDiaryItems = userRecords.filter(
-    (item, idx, self) =>
-      self.findIndex((v) => v.time === item.time && v.text === item.text) ===
-      idx
-  );
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/diary-review?userId=${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setItems(data.items || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("データ取得に失敗しました");
+        setLoading(false);
+      });
+  }, [userId]);
 
-  // DBからAIコーチング内容を取得
-  const aiLogRows = await db
-    .select()
-    .from(ai_logs)
-    .where(eq(ai_logs.user_id, userId))
-    .orderBy(desc(ai_logs.timestamp));
-  const aiEntries = aiLogRows.map((entry) => ({
-    timestamp: entry.timestamp,
-    response: entry.response,
-  }));
-
-  // recordとai_logを統合して時系列順に並べる
-  const mergedItems = [
-    ...uniqueDiaryItems.map((item) => ({
-      type: "diary" as const,
-      time: item.time,
-      mood: item.mood,
-      text: item.text,
-    })),
-    ...aiEntries.map((entry) => ({
-      type: "ai" as const,
-      time: entry.timestamp,
-      text: entry.response,
-    })),
-  ].sort((a, b) => b.time.localeCompare(a.time));
+  if (loading) return <div>読み込み中...</div>;
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
 
   return (
     <main style={{ maxWidth: 600, margin: "40px auto", padding: 16 }}>
@@ -58,7 +32,7 @@ export default async function DiaryReviewPage({ userId }: { userId: number }) {
         日記の振り返り
       </h1>
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {mergedItems.map((item, idx) => (
+        {items.map((item, idx) => (
           <li
             key={idx}
             style={{
