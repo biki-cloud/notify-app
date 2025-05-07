@@ -3,38 +3,10 @@
   "dialect": "postgresql",
   "entries": [
     {
-      "idx": 0,
+      "idx": 8,
       "version": "7",
-      "when": 1746489910018,
-      "tag": "0000_careless_triathlon",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1746490335105,
-      "tag": "0001_shallow_leech",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1746490507670,
-      "tag": "0002_strong_baron_strucker",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1746490617529,
-      "tag": "0003_deep_gateway",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1746490951326,
-      "tag": "0004_curved_rhino",
+      "when": 1746614966979,
+      "tag": "0008_special_victor_mancha",
       "breakpoints": true
     }
   ]

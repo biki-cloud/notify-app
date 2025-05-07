@@ -3,26 +3,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!userId) {
-      setError("ユーザIDを入力してください");
+    if (!username) {
+      setError("ユーザ名を入力してください");
       return;
     }
     // DBにユーザーが存在するか確認
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ username }),
     });
     const data = await res.json();
     if (data.ok) {
-      localStorage.setItem("userId", userId);
+      localStorage.setItem("userId", username);
       router.push("/");
     } else {
       setError(data.error || "ログイン失敗");
@@ -43,9 +43,9 @@ export default function LoginPage() {
       <h1>ログイン</h1>
       <input
         type="text"
-        placeholder="ユーザID"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
+        placeholder="ユーザ名"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
         required
       />
       <button type="submit">ログイン</button>

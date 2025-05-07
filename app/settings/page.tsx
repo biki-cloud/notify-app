@@ -1,24 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 
 const SETTINGS_KEY = "notify_settings";
-const USER_ID_KEY = "notify_user_id";
+const USERNAME_KEY = "notify_username";
 
 export default function SettingsPage() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [type, setType] = useState<"ai" | "custom">("ai");
   const [customMessage, setCustomMessage] = useState("");
   const [saved, setSaved] = useState(false);
 
-  // ユーザーIDの管理
+  // ユーザー名の管理
   useEffect(() => {
-    let id = localStorage.getItem(USER_ID_KEY);
-    if (!id) {
-      id = uuidv4();
-      localStorage.setItem(USER_ID_KEY, id);
+    let name = localStorage.getItem(USERNAME_KEY);
+    if (!name) {
+      name = "guest";
+      localStorage.setItem(USERNAME_KEY, name);
     }
-    setUserId(id);
+    setUsername(name);
   }, []);
 
   // 設定の読み込み
@@ -38,11 +37,11 @@ export default function SettingsPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     // サーバーにも保存
-    if (userId) {
+    if (username) {
       await fetch("/api/user-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, type, customMessage }),
+        body: JSON.stringify({ userId: username, type, customMessage }),
       });
     }
   };
@@ -238,7 +237,7 @@ export default function SettingsPage() {
           保存
         </button>
         {saved && <div className="text-green-700 mt-3">保存しました</div>}
-        <div className="mt-8 text-xs text-gray-500">ユーザーID: {userId}</div>
+        <div className="mt-8 text-xs text-gray-500">ユーザー名: {username}</div>
       </div>
     </div>
   );

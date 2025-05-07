@@ -3,7 +3,7 @@ import webpush from "web-push";
 import { db } from "../../../drizzle/db";
 import {
   ai_logs,
-  user_settings,
+  notify_settings,
   goals,
   records,
   subscriptions,
@@ -38,7 +38,7 @@ export async function POST() {
   let userSettings: Record<string, { type: string; customMessage: string }> =
     {};
   try {
-    const settingsRows = await db.select().from(user_settings);
+    const settingsRows = await db.select().from(notify_settings);
     userSettings = Object.fromEntries(
       settingsRows.map((row) => [
         row.user_id,

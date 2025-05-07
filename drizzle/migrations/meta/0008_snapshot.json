@@ -1,9 +1,58 @@
 {
-  "id": "0292dd2e-7485-4b73-ac5b-4a1f6eae9c53",
-  "prevId": "066bbeeb-fdb1-4937-aeb1-69d5871c631b",
+  "id": "30707836-07a4-4c22-822f-5fcbdff6b5be",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "notify_app.ai_logs": {
+      "name": "ai_logs",
+      "schema": "notify_app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prompt": {
+          "name": "prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response": {
+          "name": "response",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_cost_jp_en": {
+          "name": "total_cost_jp_en",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "notify_app.goals": {
       "name": "goals",
       "schema": "notify_app",
@@ -16,7 +65,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "varchar(64)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -28,6 +77,43 @@
         },
         "goal": {
           "name": "goal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "notify_app.notify_settings": {
+      "name": "notify_settings",
+      "schema": "notify_app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custom_message": {
+          "name": "custom_message",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -53,7 +139,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "varchar(64)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -102,7 +188,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "varchar(64)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -129,8 +215,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "notify_app.user_settings": {
-      "name": "user_settings",
+    "notify_app.user": {
+      "name": "user",
       "schema": "notify_app",
       "columns": {
         "id": {
@@ -139,21 +225,9 @@
           "primaryKey": true,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "username": {
+          "name": "username",
           "type": "varchar(64)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar(32)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "custom_message": {
-          "name": "custom_message",
-          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -161,7 +235,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "user_username_unique": {
+          "name": "user_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

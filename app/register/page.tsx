@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
@@ -12,12 +12,12 @@ export default function RegisterPage() {
     setError("");
     const res = await fetch("/api/register", {
       method: "POST",
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ username }),
       headers: { "Content-Type": "application/json" },
     });
     const data = await res.json();
     if (data.ok) {
-      localStorage.setItem("userId", userId);
+      localStorage.setItem("userId", username);
       router.push("/login");
     } else {
       setError(data.error || "登録失敗");
@@ -38,9 +38,9 @@ export default function RegisterPage() {
       <h1>新規登録</h1>
       <input
         type="text"
-        placeholder="ユーザID"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
+        placeholder="ユーザ名"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
         required
       />
       <button type="submit">登録</button>
