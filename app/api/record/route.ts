@@ -41,6 +41,8 @@ export async function GET(req: NextRequest) {
   if (!userId)
     return NextResponse.json({ error: "userIdは必須です" }, { status: 400 });
 
+  const userIdNum = typeof userId === "string" ? Number(userId) : userId;
+
   if (date) {
     // 日付（YYYY-MM-DD）で始まる最新の記録を返す
     const result = await db
@@ -48,7 +50,7 @@ export async function GET(req: NextRequest) {
       .from(records)
       .where(
         and(
-          eq(records.user_id, userId),
+          eq(records.user_id, userIdNum),
           sql`${records.date} LIKE ${date + "%"}`
         )
       )
@@ -65,7 +67,7 @@ export async function GET(req: NextRequest) {
     const result = await db
       .select()
       .from(records)
-      .where(eq(records.user_id, userId))
+      .where(eq(records.user_id, userIdNum))
       .orderBy(desc(records.date));
     // {date: {mood, diary}, ...} の形式に変換
     const converted = Object.fromEntries(

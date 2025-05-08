@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../drizzle/db";
-import { user_settings } from "../../../drizzle/schema";
+import { notify_settings } from "../../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 // 設定保存API
@@ -11,17 +11,17 @@ export async function POST(req: NextRequest) {
   // 既存レコードがあればUPDATE、なければINSERT
   const existing = await db
     .select()
-    .from(user_settings)
-    .where(eq(user_settings.user_id, userId))
+    .from(notify_settings)
+    .where(eq(notify_settings.user_id, userId))
     .limit(1);
   if (existing.length > 0) {
     await db
-      .update(user_settings)
+      .update(notify_settings)
       .set({ type, custom_message: customMessage })
-      .where(eq(user_settings.user_id, userId));
+      .where(eq(notify_settings.user_id, userId));
   } else {
     await db
-      .insert(user_settings)
+      .insert(notify_settings)
       .values({ user_id: userId, type, custom_message: customMessage });
   }
   return NextResponse.json({ ok: true });
@@ -33,10 +33,11 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("userId");
   if (!userId)
     return NextResponse.json({ error: "userId required" }, { status: 400 });
+  const userIdNum = typeof userId === "string" ? Number(userId) : userId;
   const result = await db
     .select()
-    .from(user_settings)
-    .where(eq(user_settings.user_id, userId))
+    .from(notify_settings)
+    .where(eq(notify_settings.user_id, userIdNum))
     .limit(1);
   if (result.length > 0) {
     const { type, custom_message } = result[0];

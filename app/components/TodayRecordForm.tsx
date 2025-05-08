@@ -15,7 +15,7 @@ export default function TodayRecordForm() {
   const today = dayjs().format("YYYY-MM-DD");
   const userId =
     typeof window !== "undefined"
-      ? localStorage.getItem("notify_user_id") || "demo_user"
+      ? localStorage.getItem("userId") || "demo_user"
       : "demo_user";
 
   // 記録取得

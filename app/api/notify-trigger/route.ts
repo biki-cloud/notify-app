@@ -3,7 +3,7 @@ import webpush from "web-push";
 import { db } from "../../../drizzle/db";
 import {
   ai_logs,
-  user_settings,
+  notify_settings,
   goals,
   records,
   subscriptions,
@@ -23,30 +23,48 @@ function getJSTISOString() {
 }
 
 export async function POST() {
+  console.log("notify-trigger POST エンドポイントが呼ばれました");
   // Push購読情報をDBから取得
-  const subs = await db.select().from(subscriptions);
+  let subs;
+  try {
+    subs = await db.select().from(subscriptions);
+    console.log("購読情報取得成功:", subs.length, "件");
+  } catch (e) {
+    console.error("購読情報取得エラー", e);
+    return NextResponse.json({ notify: false, error: "購読情報取得エラー" });
+  }
 
   // ユーザー設定をDBから取得
   let userSettings: Record<string, { type: string; customMessage: string }> =
     {};
   try {
-    const settingsRows = await db.select().from(user_settings);
+    const settingsRows = await db.select().from(notify_settings);
     userSettings = Object.fromEntries(
       settingsRows.map((row) => [
         row.user_id,
         { type: row.type, customMessage: row.custom_message },
       ])
     );
-  } catch {}
+    console.log(
+      "ユーザー設定取得成功:",
+      Object.keys(userSettings).length,
+      "件"
+    );
+  } catch (e) {
+    console.error("ユーザー設定取得エラー", e);
+  }
 
   const results = await Promise.allSettled(
-    subs.map(async (sub) => {
+    subs.map(async (sub, idx) => {
+      console.log(`[${idx}] push通知処理開始`, sub);
       let body = "APIからの通知";
       const userId = sub.user_id;
       const setting = userId ? userSettings[userId] : undefined;
       if (setting) {
+        console.log(`[${idx}] ユーザー設定:`, setting);
         if (setting.type === "custom" && setting.customMessage) {
           body = setting.customMessage;
+          console.log(`[${idx}] カスタムメッセージ使用:`, body);
         } else if (setting.type === "ai") {
           let content = "";
           // ユーザーの最新3件の記録を取得
@@ -57,39 +75,42 @@ export async function POST() {
           let totalCostStr = "-";
 
           if (userId) {
-            // goals
-            const goalRows = await db
-              .select()
-              .from(goals)
-              .where(eq(goals.user_id, userId))
-              .limit(1);
-            const goalRow = goalRows[0];
-            if (goalRow) {
-              userGoal = goalRow.goal;
-              userHabit = goalRow.habit;
+            try {
+              // goals
+              const goalRows = await db
+                .select()
+                .from(goals)
+                .where(eq(goals.user_id, userId))
+                .limit(1);
+              const goalRow = goalRows[0];
+              if (goalRow) {
+                userGoal = goalRow.goal;
+                userHabit = goalRow.habit;
+              }
+              // records
+              const recordRows = await db
+                .select()
+                .from(records)
+                .where(eq(records.user_id, userId));
+              const sorted = recordRows
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .slice(0, 3)
+                .map((rec) => ({
+                  date: rec.date,
+                  mood: Array.isArray(rec.mood)
+                    ? rec.mood
+                    : rec.mood
+                    ? [rec.mood]
+                    : [],
+                  diary: rec.diary,
+                }));
+              recentRecords = sorted;
+              console.log(`[${idx}] 直近記録取得:`, recentRecords);
+            } catch (e) {
+              console.error(`[${idx}] 記録/目標取得エラー`, e);
             }
-
-            // records
-            const recordRows = await db
-              .select()
-              .from(records)
-              .where(eq(records.user_id, userId));
-            const sorted = recordRows
-              .sort((a, b) => b.date.localeCompare(a.date))
-              .slice(0, 3)
-              .map((rec) => ({
-                date: rec.date,
-                mood: Array.isArray(rec.mood)
-                  ? rec.mood
-                  : rec.mood
-                  ? [rec.mood]
-                  : [],
-                diary: rec.diary,
-              }));
-            recentRecords = sorted;
           }
           if (recentRecords.length > 0) {
-            // OpenAI APIに3日分の記録内容＋目標を投げてコーチングメッセージを生成
             content = recentRecords
               .map(
                 (rec, i) =>
@@ -105,6 +126,7 @@ export async function POST() {
               content += `\n\n【現在の習慣】\n${userHabit}`;
             }
             try {
+              console.log(`[${idx}] OpenAI APIリクエスト送信:`, content);
               const openaiRes = await fetch(
                 "https://api.openai.com/v1/chat/completions",
                 {
@@ -129,10 +151,10 @@ export async function POST() {
                 }
               );
               const openaiData = await openaiRes.json();
+              console.log(`[${idx}] OpenAI APIレスポンス:`, openaiData);
               body =
                 openaiData.choices?.[0]?.message?.content?.trim() ||
                 "コーチングメッセージの生成に失敗しました";
-
               // --- 料金計算処理追加 ---
               try {
                 const usage = openaiData.usage;
@@ -148,10 +170,17 @@ export async function POST() {
                   totalCostStr = `${totalCostJPY}円 ($${totalCostUSD.toFixed(
                     4
                   )})`;
+                  console.log(`[${idx}] OpenAI APIコスト:`, totalCostStr);
                 }
-              } catch {}
+              } catch (e) {
+                console.error(`[${idx}] コスト計算エラー`, e);
+              }
               // --- ここまで ---
-            } catch {
+            } catch (e) {
+              console.error(
+                `[${idx}] OpenAI APIリクエスト/レスポンスエラー`,
+                e
+              );
               body = "コーチングメッセージの生成に失敗しました";
             }
             // AIログ保存
@@ -164,14 +193,18 @@ export async function POST() {
                   response: body,
                   total_cost_jp_en: totalCostStr,
                 });
+                console.log(`[${idx}] AIログ保存成功`);
               } catch (e) {
-                console.error("AIログDB保存エラー", e);
+                console.error(`[${idx}] AIログDB保存エラー`, e);
               }
             }
           } else {
             body = "記録が見つかりませんでした";
+            console.log(`[${idx}] 記録なし`);
           }
         }
+      } else {
+        console.log(`[${idx}] ユーザー設定なし`);
       }
       const payload = JSON.stringify({
         title: "PWAプッシュ通知",
@@ -182,10 +215,18 @@ export async function POST() {
         endpoint: sub.endpoint,
         keys,
       };
-      const result = await webpush.sendNotification(pushSub, payload);
-      return result;
+      console.log(`[${idx}] push通知送信直前:`, { pushSub, payload });
+      try {
+        const result = await webpush.sendNotification(pushSub, payload);
+        console.log(`[${idx}] push通知送信成功`, result);
+        return result;
+      } catch (e) {
+        console.error(`[${idx}] push通知送信エラー`, e);
+        return { error: "push通知送信エラー", detail: e };
+      }
     })
   );
+  console.log("全push通知処理完了", results);
   return NextResponse.json({
     notify: true,
     results,

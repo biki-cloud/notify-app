@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import RequireLogin from "../components/RequireLogin";
 
-const SETTINGS_KEY = "notify_settings";
-const USER_ID_KEY = "notify_user_id";
+const USERID_KEY = "userId";
 
 export default function SettingsPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -13,38 +12,31 @@ export default function SettingsPage() {
 
   // ユーザーIDの管理
   useEffect(() => {
-    let id = localStorage.getItem(USER_ID_KEY);
-    if (!id) {
-      id = uuidv4();
-      localStorage.setItem(USER_ID_KEY, id);
-    }
+    const id = localStorage.getItem(USERID_KEY);
     setUserId(id);
   }, []);
 
-  // 設定の読み込み
+  // 設定の取得（API経由）
   useEffect(() => {
-    const settings = localStorage.getItem(SETTINGS_KEY);
-    if (settings) {
-      const parsed = JSON.parse(settings);
-      setType(parsed.type || "ai");
-      setCustomMessage(parsed.customMessage || "");
-    }
-  }, []);
+    if (!userId) return;
+    fetch(`/api/user-settings?userId=${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.type) setType(data.type);
+        if (data.customMessage) setCustomMessage(data.customMessage);
+      });
+  }, [userId]);
 
   // 設定の保存
   const handleSave = async () => {
-    const settings = { type, customMessage };
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    if (!userId) return;
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
-    // サーバーにも保存
-    if (userId) {
-      await fetch("/api/user-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, type, customMessage }),
-      });
-    }
+    await fetch("/api/user-settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type, customMessage }),
+    });
   };
 
   // --- 通知送信UI用 state & 関数 ---
@@ -87,20 +79,29 @@ export default function SettingsPage() {
     if (mode === "quote") {
       msg = await fetchQuote();
     }
+    console.log("[sendNotification] 通知送信開始", { msg, mode });
     if (Notification.permission === "granted") {
       if (navigator.serviceWorker) {
         navigator.serviceWorker.getRegistration().then((reg) => {
+          console.log("[sendNotification] ServiceWorker登録取得", reg);
           reg?.showNotification("通知", { body: msg });
+          console.log("[sendNotification] showNotification実行", { body: msg });
         });
       } else {
         new Notification("通知", { body: msg });
+        console.log("[sendNotification] new Notification実行", { body: msg });
       }
+    } else {
+      console.log(
+        "[sendNotification] Notification.permissionがgrantedではありません",
+        Notification.permission
+      );
     }
   };
 
   // サブスクリプション登録
   const subscribePush = async () => {
-    if (!("serviceWorker" in navigator) || !vapidKey) return;
+    if (!("serviceWorker" in navigator) || !vapidKey || !userId) return;
     const reg = await navigator.serviceWorker.ready;
     // 既存購読があれば解除
     const existing = await reg.pushManager.getSubscription();
@@ -111,7 +112,6 @@ export default function SettingsPage() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
-    const userId = localStorage.getItem("notify_user_id");
     await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -135,111 +135,113 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center py-10">
-      {/* 通知送信UI */}
-      <section className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6 mb-8">
-        <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">
-          通知を送る
-        </h2>
-        <div className="flex flex-col gap-4">
-          <label className="font-bold">通知モード</label>
-          <div className="flex gap-4 mb-2">
-            <label>
+    <RequireLogin>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center py-10">
+        {/* 通知送信UI */}
+        <section className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">
+            通知を送る
+          </h2>
+          <div className="flex flex-col gap-4">
+            <label className="font-bold">通知モード</label>
+            <div className="flex gap-4 mb-2">
+              <label>
+                <input
+                  type="radio"
+                  name="mode"
+                  value="custom"
+                  checked={mode === "custom"}
+                  onChange={() => setMode("custom")}
+                />
+                <span className="ml-1">自分のメッセージ</span>
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="mode"
+                  value="quote"
+                  checked={mode === "quote"}
+                  onChange={() => setMode("quote")}
+                />
+                <span className="ml-1">哲学名言（OpenAI）</span>
+              </label>
+            </div>
+            {mode === "custom" && (
+              <>
+                <label className="font-bold">通知メッセージ</label>
+                <input
+                  className="border rounded px-2 py-1"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="通知したいメッセージを入力"
+                />
+              </>
+            )}
+            <button
+              className="mt-4 px-4 py-2 rounded text-white bg-blue-500 hover:bg-blue-600 transition"
+              onClick={sendNotification}
+              disabled={loadingQuote}
+            >
+              {loadingQuote ? "名言取得中..." : "即時通知"}
+            </button>
+            <button
+              className="mt-2 px-4 py-2 rounded text-white bg-purple-600 hover:bg-purple-700 transition"
+              onClick={subscribePush}
+            >
+              Push通知を購読
+            </button>
+          </div>
+        </section>
+
+        {/* 既存の通知設定UI */}
+        <div className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">
+            通知設定
+          </h2>
+          <div className="mb-4">
+            <label className="mr-6">
               <input
                 type="radio"
-                name="mode"
-                value="custom"
-                checked={mode === "custom"}
-                onChange={() => setMode("custom")}
+                name="type"
+                value="ai"
+                checked={type === "ai"}
+                onChange={() => setType("ai")}
               />
-              <span className="ml-1">自分のメッセージ</span>
+              <span className="ml-1">AIが持ってくるメッセージ</span>
             </label>
             <label>
               <input
                 type="radio"
-                name="mode"
-                value="quote"
-                checked={mode === "quote"}
-                onChange={() => setMode("quote")}
+                name="type"
+                value="custom"
+                checked={type === "custom"}
+                onChange={() => setType("custom")}
               />
-              <span className="ml-1">哲学名言（OpenAI）</span>
+              <span className="ml-1">自分で決めたメッセージ</span>
             </label>
           </div>
-          {mode === "custom" && (
-            <>
-              <label className="font-bold">通知メッセージ</label>
+          {type === "custom" && (
+            <div className="mb-4">
+              <label className="block mb-1">メッセージ内容：</label>
               <input
-                className="border rounded px-2 py-1"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="通知したいメッセージを入力"
+                type="text"
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                className="w-full border rounded px-2 py-1"
+                placeholder="通知で表示するメッセージを入力"
               />
-            </>
+            </div>
           )}
           <button
-            className="mt-4 px-4 py-2 rounded text-white bg-blue-500 hover:bg-blue-600 transition"
-            onClick={sendNotification}
-            disabled={loadingQuote}
+            onClick={handleSave}
+            className="px-4 py-2 rounded text-white bg-blue-600 hover:bg-blue-700 transition"
           >
-            {loadingQuote ? "名言取得中..." : "即時通知"}
+            保存
           </button>
-          <button
-            className="mt-2 px-4 py-2 rounded text-white bg-purple-600 hover:bg-purple-700 transition"
-            onClick={subscribePush}
-          >
-            Push通知を購読
-          </button>
+          {saved && <div className="text-green-700 mt-3">保存しました</div>}
+          <div className="mt-8 text-xs text-gray-500">ユーザーID: {userId}</div>
         </div>
-      </section>
-
-      {/* 既存の通知設定UI */}
-      <div className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6 mb-8">
-        <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">
-          通知設定
-        </h2>
-        <div className="mb-4">
-          <label className="mr-6">
-            <input
-              type="radio"
-              name="type"
-              value="ai"
-              checked={type === "ai"}
-              onChange={() => setType("ai")}
-            />
-            <span className="ml-1">AIが持ってくるメッセージ</span>
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="type"
-              value="custom"
-              checked={type === "custom"}
-              onChange={() => setType("custom")}
-            />
-            <span className="ml-1">自分で決めたメッセージ</span>
-          </label>
-        </div>
-        {type === "custom" && (
-          <div className="mb-4">
-            <label className="block mb-1">メッセージ内容：</label>
-            <input
-              type="text"
-              value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
-              className="w-full border rounded px-2 py-1"
-              placeholder="通知で表示するメッセージを入力"
-            />
-          </div>
-        )}
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 rounded text-white bg-blue-600 hover:bg-blue-700 transition"
-        >
-          保存
-        </button>
-        {saved && <div className="text-green-700 mt-3">保存しました</div>}
-        <div className="mt-8 text-xs text-gray-500">ユーザーID: {userId}</div>
       </div>
-    </div>
+    </RequireLogin>
   );
 }

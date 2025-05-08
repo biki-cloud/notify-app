@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (existing.length === 0) {
     await db.insert(subscriptions).values({
       endpoint: subscription.endpoint,
-      user_id: subscription.userId || null,
+      user_id: subscription.userId ? Number(subscription.userId) : null,
       keys: subscription.keys,
     });
   }
