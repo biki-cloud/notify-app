@@ -79,14 +79,23 @@ export default function SettingsPage() {
     if (mode === "quote") {
       msg = await fetchQuote();
     }
+    console.log("[sendNotification] 通知送信開始", { msg, mode });
     if (Notification.permission === "granted") {
       if (navigator.serviceWorker) {
         navigator.serviceWorker.getRegistration().then((reg) => {
+          console.log("[sendNotification] ServiceWorker登録取得", reg);
           reg?.showNotification("通知", { body: msg });
+          console.log("[sendNotification] showNotification実行", { body: msg });
         });
       } else {
         new Notification("通知", { body: msg });
+        console.log("[sendNotification] new Notification実行", { body: msg });
       }
+    } else {
+      console.log(
+        "[sendNotification] Notification.permissionがgrantedではありません",
+        Notification.permission
+      );
     }
   };
 

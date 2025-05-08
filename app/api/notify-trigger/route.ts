@@ -215,9 +215,10 @@ export async function POST() {
         endpoint: sub.endpoint,
         keys,
       };
+      console.log(`[${idx}] push通知送信直前:`, { pushSub, payload });
       try {
         const result = await webpush.sendNotification(pushSub, payload);
-        console.log(`[${idx}] push通知送信成功`);
+        console.log(`[${idx}] push通知送信成功`, result);
         return result;
       } catch (e) {
         console.error(`[${idx}] push通知送信エラー`, e);
