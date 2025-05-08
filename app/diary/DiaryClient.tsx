@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
 
-export default function DiaryClient() {
+export default function DiaryClient({
+  onCoachingComplete,
+}: { onCoachingComplete?: () => void } = {}) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -14,7 +16,7 @@ export default function DiaryClient() {
       });
       if (res.ok) {
         setMessage("コーチング通知を送信しました！");
-        window.location.reload();
+        if (onCoachingComplete) onCoachingComplete();
       } else {
         setMessage("通知送信に失敗しました");
       }

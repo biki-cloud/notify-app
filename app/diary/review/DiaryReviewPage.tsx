@@ -21,7 +21,8 @@ export default function DiaryReviewPage({ userId }: { userId: number }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  // データ再取得用関数
+  const fetchItems = () => {
     setLoading(true);
     fetch(`/api/diary-review?userId=${userId}`)
       .then((res) => res.json())
@@ -33,6 +34,10 @@ export default function DiaryReviewPage({ userId }: { userId: number }) {
         setError("データ取得に失敗しました");
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchItems();
   }, [userId]);
 
   if (loading) return <div>読み込み中...</div>;
@@ -40,7 +45,7 @@ export default function DiaryReviewPage({ userId }: { userId: number }) {
 
   return (
     <main style={{ maxWidth: 600, margin: "40px auto", padding: 16 }}>
-      <DiaryClient />
+      <DiaryClient onCoachingComplete={fetchItems} />
       <h1 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 24 }}>
         日記の振り返り
       </h1>
