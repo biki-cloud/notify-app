@@ -45,3 +45,6 @@ record.json
 user-settings.json
 subscriptions.json
 goals.json
+
+
+public/sw.js
