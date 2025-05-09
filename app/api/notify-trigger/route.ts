@@ -11,10 +11,12 @@ import {
 import { eq } from "drizzle-orm";
 
 webpush.setVapidDetails(
-  "mailto:example@example.com",
+  `mailto:${process.env.VAPID_EMAIL}`,
   process.env.VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );
+console.log("[VAPID] subject:", "mailto:example@example.com");
+console.log("[VAPID] VAPID_PUBLIC_KEY:", process.env.VAPID_PUBLIC_KEY);
 
 function getJSTISOString() {
   const now = new Date();
@@ -216,6 +218,7 @@ export async function POST() {
         keys,
       };
       console.log(`[${idx}] push通知送信直前:`, { pushSub, payload });
+      console.log(`[${idx}] pushSub.endpoint:`, pushSub.endpoint);
       try {
         const result = await webpush.sendNotification(pushSub, payload);
         console.log(`[${idx}] push通知送信成功`, result);
