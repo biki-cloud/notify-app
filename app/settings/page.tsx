@@ -44,6 +44,7 @@ export default function SettingsPage() {
   const [mode, setMode] = useState<"custom" | "quote">("custom");
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [vapidKey, setVapidKey] = useState<string | null>(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   // 通知許可リクエスト
   useEffect(() => {
@@ -58,6 +59,14 @@ export default function SettingsPage() {
       .then((res) => res.json())
       .then((data) => setVapidKey(data.key));
   }, []);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.ready.then(async (reg) => {
+      const sub = await reg.pushManager.getSubscription();
+      setIsSubscribed(!!sub);
+    });
+  }, [vapidKey, userId]);
 
   // 名言取得関数
   const fetchQuote = async () => {
@@ -103,15 +112,16 @@ export default function SettingsPage() {
   const subscribePush = async () => {
     if (!("serviceWorker" in navigator) || !vapidKey || !userId) return;
     const reg = await navigator.serviceWorker.ready;
-    // 既存購読があれば解除
-    const existing = await reg.pushManager.getSubscription();
-    if (existing) {
-      await existing.unsubscribe();
+    // 既存購読があればそれを使う
+    let sub = await reg.pushManager.getSubscription();
+    console.log("[subscribePush] 既存購読取得", sub);
+    if (!sub) {
+      console.log("[subscribePush] 新規購読登録");
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      });
     }
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidKey),
-    });
     await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -185,11 +195,21 @@ export default function SettingsPage() {
               {loadingQuote ? "名言取得中..." : "即時通知"}
             </button>
             <button
-              className="mt-2 px-4 py-2 rounded text-white bg-purple-600 hover:bg-purple-700 transition"
+              className={`mt-2 px-4 py-2 rounded text-white transition ${
+                isSubscribed
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-700"
+              }`}
               onClick={subscribePush}
+              disabled={isSubscribed}
             >
-              Push通知を購読
+              通知受け取り設定を行う
             </button>
+            {isSubscribed && (
+              <div className="mt-2 text-green-700">
+                すでに通知受け取り設定済みです
+              </div>
+            )}
           </div>
         </section>
 
