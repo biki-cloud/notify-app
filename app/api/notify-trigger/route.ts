@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import webpush from "web-push";
+import { sendPushNotification } from "../../../utils/pushNotifier";
 import { db } from "../../../drizzle/db";
 import {
   ai_logs,
@@ -9,14 +9,6 @@ import {
   subscriptions,
 } from "../../../drizzle/schema";
 import { eq } from "drizzle-orm";
-
-webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL}`,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-console.log("[VAPID] subject:", "mailto:example@example.com");
-console.log("[VAPID] VAPID_PUBLIC_KEY:", process.env.VAPID_PUBLIC_KEY);
 
 function getJSTISOString() {
   const now = new Date();
@@ -220,7 +212,7 @@ export async function POST() {
       console.log(`[${idx}] push通知送信直前:`, { pushSub, payload });
       console.log(`[${idx}] pushSub.endpoint:`, pushSub.endpoint);
       try {
-        const result = await webpush.sendNotification(pushSub, payload);
+        const result = await sendPushNotification(pushSub, payload);
         console.log(`[${idx}] push通知送信成功`, result);
         return result;
       } catch (e) {
