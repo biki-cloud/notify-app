@@ -20,22 +20,37 @@ export const records = schema.table("records", {
   diary: text("diary").notNull(),
 });
 
-// 目標・習慣テーブル
+// 目標テーブル（配列型カラム）
 export const goals = schema.table("goals", {
   id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull(),
-  habit: text("habit").notNull(),
-  goal: text("goal").notNull(),
+  user_id: integer("user_id").notNull().unique(),
+  short_term_goals: text("short_term_goals").array(),
+  mid_term_goals: text("mid_term_goals").array(),
+  long_term_goals: text("long_term_goals").array(),
+  life_goals: text("life_goals").array(),
+  core_values: text("core_values").array(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// 自己分析テーブル（配列型カラム）
+export const self_analysis = schema.table("self_analysis", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().unique(),
+  strengths: text("strengths").array(),
+  weaknesses: text("weaknesses").array(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // 習慣テーブル（配列型カラム）
 export const habits = schema.table("habits", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").notNull().unique(),
-  ideal_habits: text("ideal_habits").array().notNull(),
-  bad_habits: text("bad_habits").array().notNull(),
-  new_habits: text("new_habits").array().notNull(),
-  tracking_habits: text("tracking_habits").array().notNull(),
+  ideal_habits: text("ideal_habits").array(),
+  bad_habits: text("bad_habits").array(),
+  new_habits: text("new_habits").array(),
+  tracking_habits: text("tracking_habits").array(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
