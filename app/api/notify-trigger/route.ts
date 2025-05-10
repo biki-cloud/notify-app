@@ -8,7 +8,7 @@ import {
 } from "../../../drizzle/schema";
 import { fetchOpenAIChatWithDefaults } from "../../lib/server/openai";
 import {
-  buildPromptContent,
+  buildAllDataPromptContent,
   getAllDataPrompt,
 } from "../../lib/server/prompt/getAllData";
 import { OPENAI_DEFAULT_PARAMS } from "../../lib/server/promptBase";
@@ -75,7 +75,7 @@ export async function POST() {
           try {
             const userData = await getAllDataPrompt(Number(userId));
             if (userData.recentRecords && userData.recentRecords.length > 0) {
-              const promptContent = buildPromptContent(
+              const promptContent = buildAllDataPromptContent(
                 userData.recentRecords,
                 userData.shortTermGoals,
                 userData.midTermGoals,

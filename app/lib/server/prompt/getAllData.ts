@@ -1,6 +1,6 @@
 import { fetchPromptDataWrapper } from "../promptBase";
 
-export function buildPromptContent(
+export function buildAllDataPromptContent(
   recentRecords: { date: string; mood: string[]; diary: string }[],
   shortTermGoals?: string[],
   midTermGoals?: string[],
