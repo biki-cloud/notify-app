@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { EMOJI_LIST } from "../emojiList";
+import { EMOJI_LIST } from "../lib/shared/emojiList";
 
 export default function TodayRecordForm() {
   const [mood, setMood] = useState<string[]>([]);

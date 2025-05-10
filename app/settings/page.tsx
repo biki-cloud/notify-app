@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RequireLogin from "../components/RequireLogin";
-import { sendNotification } from "../utils/clientNotification";
+import { sendNotification } from "../lib/client/clientNotification";
 
 const USERID_KEY = "userId";
 
