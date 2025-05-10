@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendPushNotification } from "../../../utils/pushNotifier";
+import { sendPushNotification } from "../../../utils/serverNotification";
 import { db } from "../../../drizzle/db";
 import {
   ai_logs,
