@@ -1,15 +1,24 @@
 import webpush from "web-push";
 
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:example@example.com";
+const VAPID_EMAIL = process.env.VAPID_EMAIL!;
+if (!VAPID_EMAIL) {
+  throw new Error("VAPID_EMAIL is not set");
+}
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY!;
+if (!VAPID_PUBLIC_KEY) {
+  throw new Error("VAPID_PUBLIC_KEY is not set");
+}
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY!;
+if (!VAPID_PRIVATE_KEY) {
+  throw new Error("VAPID_PRIVATE_KEY is not set");
+}
 
 webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_SUBJECT}`,
+  `mailto:${VAPID_EMAIL}`,
   VAPID_PUBLIC_KEY,
   VAPID_PRIVATE_KEY
 );
-console.log("[VAPID] subject:", VAPID_SUBJECT);
+console.log("[VAPID] email:", VAPID_EMAIL);
 console.log("[VAPID] VAPID_PUBLIC_KEY:", VAPID_PUBLIC_KEY);
 
 export type PushSubscription = {
