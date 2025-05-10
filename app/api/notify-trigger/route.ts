@@ -73,21 +73,8 @@ export async function POST() {
           // AIコーチング文生成
           let body = "APIからの通知";
           try {
-            const userData = await getAllDataPrompt(Number(userId));
-            if (userData.recentRecords && userData.recentRecords.length > 0) {
-              const promptContent = buildAllDataPromptContent(
-                userData.recentRecords,
-                userData.shortTermGoals,
-                userData.midTermGoals,
-                userData.longTermGoals,
-                userData.lifeGoals,
-                userData.coreValues,
-                userData.idealHabits,
-                userData.badHabits,
-                userData.newHabits,
-                userData.trackingHabits,
-                userData.userStrengths,
-                userData.userWeaknesses
+              const promptContent = await buildAllDataPromptContent(
+                Number(userId)
               );
               try {
                 const openaiData = await fetchOpenAIChatWithDefaults(
