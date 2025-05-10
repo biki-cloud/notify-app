@@ -5,6 +5,7 @@ import {
   varchar,
   jsonb,
   integer,
+  timestamp,
 } from "drizzle-orm/pg-core";
 
 // スキーマを定義
@@ -25,6 +26,18 @@ export const goals = schema.table("goals", {
   user_id: integer("user_id").notNull(),
   habit: text("habit").notNull(),
   goal: text("goal").notNull(),
+});
+
+// 習慣テーブル（配列型カラム）
+export const habits = schema.table("habits", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().unique(),
+  ideal_habits: text("ideal_habits").array().notNull(),
+  bad_habits: text("bad_habits").array().notNull(),
+  new_habits: text("new_habits").array().notNull(),
+  tracking_habits: text("tracking_habits").array().notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // ユーザーテーブル
