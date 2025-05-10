@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RequireLogin from "../components/RequireLogin";
+import { sendNotification } from "../lib/client/clientNotification";
 
 const USERID_KEY = "userId";
 
@@ -40,10 +41,8 @@ export default function SettingsPage() {
   };
 
   // --- 通知送信UI用 state & 関数 ---
-  const [message, setMessage] = useState("");
-  const [mode, setMode] = useState<"custom" | "quote">("custom");
-  const [loadingQuote, setLoadingQuote] = useState(false);
   const [vapidKey, setVapidKey] = useState<string | null>(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   // 通知許可リクエスト
   useEffect(() => {
@@ -59,56 +58,29 @@ export default function SettingsPage() {
       .then((data) => setVapidKey(data.key));
   }, []);
 
-  // 名言取得関数
-  const fetchQuote = async () => {
-    setLoadingQuote(true);
-    try {
-      const res = await fetch("/api/quote");
-      const data = await res.json();
-      return data.quote || "名言の取得に失敗しました";
-    } catch {
-      return "名言の取得に失敗しました";
-    } finally {
-      setLoadingQuote(false);
-    }
-  };
-
-  // 通知送信関数（モード対応）
-  const sendNotification = async () => {
-    let msg = message || "テスト通知";
-    if (mode === "quote") {
-      msg = await fetchQuote();
-    }
-    console.log("[sendNotification] 通知送信開始", { msg, mode });
-    if (Notification.permission === "granted") {
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.getRegistration().then((reg) => {
-          console.log("[sendNotification] ServiceWorker登録取得", reg);
-          reg?.showNotification("通知", { body: msg });
-          console.log("[sendNotification] showNotification実行", { body: msg });
-        });
-      } else {
-        new Notification("通知", { body: msg });
-        console.log("[sendNotification] new Notification実行", { body: msg });
-      }
-    } else {
-      console.log(
-        "[sendNotification] Notification.permissionがgrantedではありません",
-        Notification.permission
-      );
-    }
-  };
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.ready.then(async (reg) => {
+      const sub = await reg.pushManager.getSubscription();
+      setIsSubscribed(!!sub);
+    });
+  }, [vapidKey, userId]);
 
   // サブスクリプション登録
   const subscribePush = async () => {
     if (!("serviceWorker" in navigator) || !vapidKey || !userId) return;
     const reg = await navigator.serviceWorker.ready;
-    // 既存購読があれば解除
-    const existing = await reg.pushManager.getSubscription();
-    if (existing) {
-      await existing.unsubscribe();
+    // 既存購読があればそれを使う
+    let sub = await reg.pushManager.getSubscription();
+    console.log("[subscribePush] 既存購読取得", sub);
+
+    if (sub) {
+      console.log("[subscribePush] 既存購読を使用");
+      return;
     }
-    const sub = await reg.pushManager.subscribe({
+
+    console.log("[subscribePush] 新規購読登録");
+    sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
@@ -117,6 +89,7 @@ export default function SettingsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...sub.toJSON(), userId }),
     });
+    setIsSubscribed(true);
     alert("Push通知の購読が完了しました");
   };
 
@@ -143,53 +116,28 @@ export default function SettingsPage() {
             通知を送る
           </h2>
           <div className="flex flex-col gap-4">
-            <label className="font-bold">通知モード</label>
-            <div className="flex gap-4 mb-2">
-              <label>
-                <input
-                  type="radio"
-                  name="mode"
-                  value="custom"
-                  checked={mode === "custom"}
-                  onChange={() => setMode("custom")}
-                />
-                <span className="ml-1">自分のメッセージ</span>
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="mode"
-                  value="quote"
-                  checked={mode === "quote"}
-                  onChange={() => setMode("quote")}
-                />
-                <span className="ml-1">哲学名言（OpenAI）</span>
-              </label>
-            </div>
-            {mode === "custom" && (
-              <>
-                <label className="font-bold">通知メッセージ</label>
-                <input
-                  className="border rounded px-2 py-1"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="通知したいメッセージを入力"
-                />
-              </>
-            )}
             <button
               className="mt-4 px-4 py-2 rounded text-white bg-blue-500 hover:bg-blue-600 transition"
-              onClick={sendNotification}
-              disabled={loadingQuote}
+              onClick={() => sendNotification()}
             >
-              {loadingQuote ? "名言取得中..." : "即時通知"}
+              テスト通知
             </button>
             <button
-              className="mt-2 px-4 py-2 rounded text-white bg-purple-600 hover:bg-purple-700 transition"
+              className={`mt-2 px-4 py-2 rounded text-white transition ${
+                isSubscribed
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-700"
+              }`}
               onClick={subscribePush}
+              disabled={isSubscribed}
             >
-              Push通知を購読
+              通知受け取り設定を行う
             </button>
+            {isSubscribed && (
+              <div className="mt-2 text-green-700">
+                すでに通知受け取り設定済みです
+              </div>
+            )}
           </div>
         </section>
 
@@ -239,7 +187,6 @@ export default function SettingsPage() {
             保存
           </button>
           {saved && <div className="text-green-700 mt-3">保存しました</div>}
-          <div className="mt-8 text-xs text-gray-500">ユーザーID: {userId}</div>
         </div>
       </div>
     </RequireLogin>
