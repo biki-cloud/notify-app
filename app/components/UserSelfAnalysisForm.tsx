@@ -1,30 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const goalCategories = [
-  { key: "short_term_goals", label: "短期目標（〜1ヶ月）" },
-  { key: "mid_term_goals", label: "中期目標（〜1年）" },
-  { key: "long_term_goals", label: "長期目標（〜5年）" },
-  { key: "life_goals", label: "人生目標（ビジョン）" },
-  { key: "core_values", label: "価値観・信条" },
+const selfAnalysisCategories = [
+  { key: "strengths", label: "自分の良いところ（強み）" },
+  { key: "weaknesses", label: "自分の課題（弱み・直したい点）" },
 ];
 
-interface Goals {
-  short_term_goals?: string[];
-  mid_term_goals?: string[];
-  long_term_goals?: string[];
-  life_goals?: string[];
-  core_values?: string[];
+interface SelfAnalysis {
+  strengths?: string[];
+  weaknesses?: string[];
   [key: string]: string[] | undefined;
 }
 
-export default function UserGoalsForm() {
-  const [goals, setGoals] = useState<Goals>({
-    short_term_goals: [""],
-    mid_term_goals: [""],
-    long_term_goals: [""],
-    life_goals: [""],
-    core_values: [""],
+export default function UserSelfAnalysisForm() {
+  const [selfAnalysis, setSelfAnalysis] = useState<SelfAnalysis>({
+    strengths: [""],
+    weaknesses: [""],
   });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,23 +27,20 @@ export default function UserGoalsForm() {
   // 既存データ取得
   useEffect(() => {
     if (!userId) return;
-    fetch(`/api/goals?userId=${userId}`)
+    fetch(`/api/self_analysis?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data) {
-          setGoals({
-            short_term_goals: data.short_term_goals || [""],
-            mid_term_goals: data.mid_term_goals || [""],
-            long_term_goals: data.long_term_goals || [""],
-            life_goals: data.life_goals || [""],
-            core_values: data.core_values || [""],
+          setSelfAnalysis({
+            strengths: data.strengths || [""],
+            weaknesses: data.weaknesses || [""],
           });
         }
       });
   }, [userId]);
 
   const handleChange = (category: string, idx: number, value: string) => {
-    setGoals((prev) => ({
+    setSelfAnalysis((prev) => ({
       ...prev,
       [category]: (prev[category] as string[]).map((v: string, i: number) =>
         i === idx ? value : v
@@ -61,14 +49,14 @@ export default function UserGoalsForm() {
   };
 
   const handleAdd = (category: string) => {
-    setGoals((prev) => ({
+    setSelfAnalysis((prev) => ({
       ...prev,
       [category]: [...(prev[category] as string[]), ""],
     }));
   };
 
   const handleRemove = (category: string, idx: number) => {
-    setGoals((prev) => ({
+    setSelfAnalysis((prev) => ({
       ...prev,
       [category]: (prev[category] as string[]).filter(
         (_: string, i: number) => i !== idx
@@ -80,10 +68,10 @@ export default function UserGoalsForm() {
     setLoading(true);
     setMsg("");
     try {
-      const res = await fetch("/api/goals", {
+      const res = await fetch("/api/self_analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, ...goals }),
+        body: JSON.stringify({ userId, ...selfAnalysis }),
       });
       if (res.ok) {
         setMsg("保存しました！");
@@ -100,12 +88,12 @@ export default function UserGoalsForm() {
   return (
     <section className="w-full max-w-md bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-lg p-6 mt-8">
       <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">
-        あなたの目標プラン
+        あなたの自己分析
       </h2>
-      {goalCategories.map((cat) => (
+      {selfAnalysisCategories.map((cat) => (
         <div className="mb-4" key={cat.key}>
           <label className="block font-bold mb-1">{cat.label}</label>
-          {(goals[cat.key] || [""]).map((v: string, idx: number) => (
+          {(selfAnalysis[cat.key] || [""]).map((v: string, idx: number) => (
             <div className="flex items-center mb-1" key={idx}>
               <input
                 className="border rounded px-2 py-1 w-full"
@@ -113,7 +101,7 @@ export default function UserGoalsForm() {
                 onChange={(e) => handleChange(cat.key, idx, e.target.value)}
                 placeholder="入力してください"
               />
-              {(goals[cat.key]?.length ?? 0) > 1 && (
+              {(selfAnalysis[cat.key]?.length ?? 0) > 1 && (
                 <button
                   type="button"
                   className="ml-2 text-red-500"

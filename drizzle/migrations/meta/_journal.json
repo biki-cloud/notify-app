@@ -8,6 +8,20 @@
       "when": 1746614966979,
       "tag": "0008_special_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1746852281559,
+      "tag": "0009_motionless_silk_fever",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1746852752464,
+      "tag": "0010_organic_chimera",
+      "breakpoints": true
     }
   ]
 }
