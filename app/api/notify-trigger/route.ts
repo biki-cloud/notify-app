@@ -115,7 +115,7 @@ export async function POST() {
       }
       // 生成したbodyを全端末に送信
       const payload = JSON.stringify({
-        title: "PWAプッシュ通知",
+        title: "😎コーチからのコメントが来ました！😎",
         body,
       });
       const sendResults = await Promise.allSettled(
