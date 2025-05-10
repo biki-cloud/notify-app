@@ -9,6 +9,12 @@ import {
   subscriptions,
 } from "../../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { fetchOpenAIChatWithDefaults } from "../../lib/server/openai";
+import {
+  buildPromptContent,
+  OPENAI_DEFAULT_PARAMS,
+} from "../../lib/server/promptBuilder";
+import { calcOpenAICost } from "../../lib/server/openaiCost";
 
 function getJSTISOString() {
   const now = new Date();
@@ -107,45 +113,15 @@ export async function POST() {
             console.error(`[${idx}] 記録/目標取得エラー`, e);
           }
           if (recentRecords.length > 0) {
-            promptContent = recentRecords
-              .map(
-                (rec, i) =>
-                  `【${i + 1}件目】\n時刻: ${rec.date}\n気分: ${
-                    Array.isArray(rec.mood) ? rec.mood.join("・") : rec.mood
-                  }\n日記: ${rec.diary}`
-              )
-              .join("\n\n");
-            if (userGoal) {
-              promptContent += `\n\n【現在の目標】\n${userGoal}`;
-            }
-            if (userHabit) {
-              promptContent += `\n\n【現在の習慣】\n${userHabit}`;
-            }
+            promptContent = buildPromptContent(
+              recentRecords,
+              userGoal,
+              userHabit
+            );
             try {
-              const openaiRes = await fetch(
-                "https://api.openai.com/v1/chat/completions",
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    model: "gpt-4-turbo",
-                    messages: [
-                      {
-                        role: "system",
-                        content:
-                          "あなたは『アイシールド21』の蛭間陽一のような口調で、ユーザーを悪魔的コーチングで励ます役です。\n\n以下はユーザーの直近3件の気分と日記、そして現在の目標と習慣です。日記の内容を中心に励ましつつ、目標や習慣の達成に向けたアドバイスや進捗確認も一言添えてください。特に習慣については、継続できているか、改善点や続けるコツなどもレビュー・アドバイスしてください。蛭間陽一は「クソ(名詞)」と「〜しやがれ」と「テメー」と「〜っきゃねえ」と「〜ぜ」という口調が特徴です。制限文字は300文字です。\n\n",
-                      },
-                      { role: "user", content: promptContent },
-                    ],
-                    max_tokens: 300,
-                    temperature: 0.9,
-                  }),
-                }
+              const openaiData = await fetchOpenAIChatWithDefaults(
+                promptContent
               );
-              const openaiData = await openaiRes.json();
               body =
                 openaiData.choices?.[0]?.message?.content?.trim() ||
                 "コーチングメッセージの生成に失敗しました";
@@ -153,17 +129,12 @@ export async function POST() {
               try {
                 const usage = openaiData.usage;
                 if (usage) {
-                  // gpt-4-turbo: input $0.01/1K, output $0.03/1K
-                  const inputTokens = usage.prompt_tokens || 0;
-                  const outputTokens = usage.completion_tokens || 0;
-                  const inputCost = (inputTokens / 1000) * 0.01;
-                  const outputCost = (outputTokens / 1000) * 0.03;
-                  const totalCostUSD = inputCost + outputCost;
-                  const totalCostJPY =
-                    Math.round(totalCostUSD * 150 * 100) / 100; // 小数第2位まで
-                  totalCostStr = `${totalCostJPY}円 ($${totalCostUSD.toFixed(
-                    4
-                  )})`;
+                  const { costString } = calcOpenAICost({
+                    model: OPENAI_DEFAULT_PARAMS.model,
+                    prompt_tokens: usage.prompt_tokens,
+                    completion_tokens: usage.completion_tokens,
+                  });
+                  totalCostStr = costString;
                 }
               } catch (e) {
                 console.error(`[${idx}] コスト計算エラー`, e);
