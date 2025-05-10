@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RequireLogin from "../components/RequireLogin";
+import { sendNotification } from "../utils/clientNotification";
 
 const USERID_KEY = "userId";
 
@@ -65,29 +66,6 @@ export default function SettingsPage() {
     });
   }, [vapidKey, userId]);
 
-  // 通知送信関数（テスト通知のみ）
-  const sendNotification = async () => {
-    const msg = "テスト通知";
-    console.log("[sendNotification] 通知送信開始", { msg });
-    if (Notification.permission === "granted") {
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.getRegistration().then((reg) => {
-          console.log("[sendNotification] ServiceWorker登録取得", reg);
-          reg?.showNotification("通知", { body: msg });
-          console.log("[sendNotification] showNotification実行", { body: msg });
-        });
-      } else {
-        new Notification("通知", { body: msg });
-        console.log("[sendNotification] new Notification実行", { body: msg });
-      }
-    } else {
-      console.log(
-        "[sendNotification] Notification.permissionがgrantedではありません",
-        Notification.permission
-      );
-    }
-  };
-
   // サブスクリプション登録
   const subscribePush = async () => {
     if (!("serviceWorker" in navigator) || !vapidKey || !userId) return;
@@ -139,7 +117,7 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-4">
             <button
               className="mt-4 px-4 py-2 rounded text-white bg-blue-500 hover:bg-blue-600 transition"
-              onClick={sendNotification}
+              onClick={() => sendNotification()}
             >
               テスト通知
             </button>
