@@ -9,9 +9,9 @@ import {
 import { fetchOpenAIChatWithDefaults } from "../../lib/server/openai";
 import {
   buildPromptContent,
-  OPENAI_DEFAULT_PARAMS,
-  fetchUserPromptData,
-} from "../../lib/server/promptBuilder";
+  getAllDataPrompt,
+} from "../../lib/server/prompt/getAllData";
+import { OPENAI_DEFAULT_PARAMS } from "../../lib/server/promptBase";
 import { calcOpenAICost } from "../../lib/server/openaiCost";
 
 function getJSTISOString() {
@@ -73,8 +73,8 @@ export async function POST() {
           // AIコーチング文生成
           let body = "APIからの通知";
           try {
-            const userData = await fetchUserPromptData(Number(userId));
-            if (userData.recentRecords.length > 0) {
+            const userData = await getAllDataPrompt(Number(userId));
+            if (userData.recentRecords && userData.recentRecords.length > 0) {
               const promptContent = buildPromptContent(
                 userData.recentRecords,
                 userData.shortTermGoals,

@@ -1,4 +1,4 @@
-import { getSystemPrompt, OPENAI_DEFAULT_PARAMS } from "./promptBuilder";
+import { getSystemPrompt, OPENAI_DEFAULT_PARAMS } from "./promptBase";
 
 export type OpenAIChatMessage = {
   role: "system" | "user" | "assistant";
