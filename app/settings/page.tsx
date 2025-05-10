@@ -204,7 +204,6 @@ export default function SettingsPage() {
             保存
           </button>
           {saved && <div className="text-green-700 mt-3">保存しました</div>}
-          <div className="mt-8 text-xs text-gray-500">ユーザーID: {userId}</div>
         </div>
       </div>
     </RequireLogin>
