@@ -40,9 +40,6 @@ export default function SettingsPage() {
   };
 
   // --- 通知送信UI用 state & 関数 ---
-  const [message, setMessage] = useState("");
-  const [mode, setMode] = useState<"custom" | "quote">("custom");
-  const [loadingQuote, setLoadingQuote] = useState(false);
   const [vapidKey, setVapidKey] = useState<string | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
 
@@ -68,27 +65,10 @@ export default function SettingsPage() {
     });
   }, [vapidKey, userId]);
 
-  // 名言取得関数
-  const fetchQuote = async () => {
-    setLoadingQuote(true);
-    try {
-      const res = await fetch("/api/quote");
-      const data = await res.json();
-      return data.quote || "名言の取得に失敗しました";
-    } catch {
-      return "名言の取得に失敗しました";
-    } finally {
-      setLoadingQuote(false);
-    }
-  };
-
-  // 通知送信関数（モード対応）
+  // 通知送信関数（テスト通知のみ）
   const sendNotification = async () => {
-    let msg = message || "テスト通知";
-    if (mode === "quote") {
-      msg = await fetchQuote();
-    }
-    console.log("[sendNotification] 通知送信開始", { msg, mode });
+    const msg = "テスト通知";
+    console.log("[sendNotification] 通知送信開始", { msg });
     if (Notification.permission === "granted") {
       if (navigator.serviceWorker) {
         navigator.serviceWorker.getRegistration().then((reg) => {
@@ -153,46 +133,11 @@ export default function SettingsPage() {
             通知を送る
           </h2>
           <div className="flex flex-col gap-4">
-            <label className="font-bold">通知モード</label>
-            <div className="flex gap-4 mb-2">
-              <label>
-                <input
-                  type="radio"
-                  name="mode"
-                  value="custom"
-                  checked={mode === "custom"}
-                  onChange={() => setMode("custom")}
-                />
-                <span className="ml-1">自分のメッセージ</span>
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="mode"
-                  value="quote"
-                  checked={mode === "quote"}
-                  onChange={() => setMode("quote")}
-                />
-                <span className="ml-1">哲学名言（OpenAI）</span>
-              </label>
-            </div>
-            {mode === "custom" && (
-              <>
-                <label className="font-bold">通知メッセージ</label>
-                <input
-                  className="border rounded px-2 py-1"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="通知したいメッセージを入力"
-                />
-              </>
-            )}
             <button
               className="mt-4 px-4 py-2 rounded text-white bg-blue-500 hover:bg-blue-600 transition"
               onClick={sendNotification}
-              disabled={loadingQuote}
             >
-              {loadingQuote ? "名言取得中..." : "即時通知"}
+              テスト通知
             </button>
             <button
               className={`mt-2 px-4 py-2 rounded text-white transition ${
