@@ -95,13 +95,17 @@ export default function SettingsPage() {
     // 既存購読があればそれを使う
     let sub = await reg.pushManager.getSubscription();
     console.log("[subscribePush] 既存購読取得", sub);
-    if (!sub) {
-      console.log("[subscribePush] 新規購読登録");
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
+
+    if (sub) {
+      console.log("[subscribePush] 既存購読を使用");
+      return;
     }
+
+    console.log("[subscribePush] 新規購読登録");
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    });
     await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
