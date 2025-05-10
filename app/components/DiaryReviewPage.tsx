@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import DiaryClient from "../diary/DiaryClient";
+import DiaryClient from "./DiaryClient";
 import { moodEmoji } from "../lib/shared/emojiList";
 
 type DiaryItem = {
