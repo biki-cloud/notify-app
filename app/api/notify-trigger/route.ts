@@ -7,6 +7,7 @@ import {
   goals,
   records,
   subscriptions,
+  habits,
 } from "../../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { fetchOpenAIChatWithDefaults } from "../../lib/server/openai";
@@ -88,8 +89,28 @@ export async function POST() {
               .limit(1);
             const goalRow = goalRows[0];
             if (goalRow) {
-              userGoal = goalRow.goal;
-              userHabit = goalRow.habit;
+              userGoal =
+                Array.isArray(goalRow.short_term_goals) &&
+                goalRow.short_term_goals.length > 0
+                  ? goalRow.short_term_goals[0]
+                  : "";
+            }
+            // habitsも取得
+            let habitRow = null;
+            try {
+              const habitRows = await db
+                .select()
+                .from(habits)
+                .where(eq(habits.user_id, Number(userId)))
+                .limit(1);
+              habitRow = habitRows[0];
+            } catch {}
+            if (habitRow) {
+              userHabit =
+                Array.isArray(habitRow.ideal_habits) &&
+                habitRow.ideal_habits.length > 0
+                  ? habitRow.ideal_habits[0]
+                  : "";
             }
             // records
             const recordRows = await db
