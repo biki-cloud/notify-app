@@ -89,6 +89,7 @@ export default function SettingsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...sub.toJSON(), userId }),
     });
+    setIsSubscribed(true);
     alert("Push通知の購読が完了しました");
   };
 
