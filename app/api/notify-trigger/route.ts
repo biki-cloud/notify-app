@@ -7,10 +7,7 @@ import {
   subscriptions,
 } from "../../../drizzle/schema";
 import { fetchOpenAIChatWithDefaults } from "../../lib/server/openai";
-import {
-  buildAllDataPromptContent,
-  getAllDataPrompt,
-} from "../../lib/server/prompt/getAllData";
+import { buildAllDataPromptContent } from "../../lib/server/prompt/getAllData";
 import { OPENAI_DEFAULT_PARAMS } from "../../lib/server/promptBase";
 import { calcOpenAICost } from "../../lib/server/openaiCost";
 
@@ -73,46 +70,43 @@ export async function POST() {
           // AIコーチング文生成
           let body = "APIからの通知";
           try {
-              const promptContent = await buildAllDataPromptContent(
-                Number(userId)
+            const promptContent = await buildAllDataPromptContent(
+              Number(userId)
+            );
+            try {
+              const openaiData = await fetchOpenAIChatWithDefaults(
+                promptContent
               );
-              try {
-                const openaiData = await fetchOpenAIChatWithDefaults(
-                  promptContent
-                );
-                body =
-                  openaiData.choices?.[0]?.message?.content?.trim() ||
-                  "コーチングメッセージの生成に失敗しました";
-                // --- 料金計算処理追加 ---
-                if (openaiData.usage) {
-                  const { costString } = calcOpenAICost({
-                    model: OPENAI_DEFAULT_PARAMS.model,
-                    prompt_tokens: openaiData.usage.prompt_tokens,
-                    completion_tokens: openaiData.usage.completion_tokens,
+              body =
+                openaiData.choices?.[0]?.message?.content?.trim() ||
+                "コーチングメッセージの生成に失敗しました";
+              // --- 料金計算処理追加 ---
+              if (openaiData.usage) {
+                const { costString } = calcOpenAICost({
+                  model: OPENAI_DEFAULT_PARAMS.model,
+                  prompt_tokens: openaiData.usage.prompt_tokens,
+                  completion_tokens: openaiData.usage.completion_tokens,
+                });
+                // totalCostStrはAIログ保存用に使う
+                try {
+                  await db.insert(ai_logs).values({
+                    user_id: Number(userId),
+                    timestamp: getJSTISOString(),
+                    prompt: promptContent,
+                    response: body,
+                    total_cost_jp_en: costString,
                   });
-                  // totalCostStrはAIログ保存用に使う
-                  try {
-                    await db.insert(ai_logs).values({
-                      user_id: Number(userId),
-                      timestamp: getJSTISOString(),
-                      prompt: promptContent,
-                      response: body,
-                      total_cost_jp_en: costString,
-                    });
-                  } catch (e) {
-                    console.error(`[${idx}] AIログDB保存エラー`, e);
-                  }
+                } catch (e) {
+                  console.error(`[${idx}] AIログDB保存エラー`, e);
                 }
-                // --- ここまで ---
-              } catch (e) {
-                console.error(
-                  `[${idx}] OpenAI APIリクエスト/レスポンスエラー`,
-                  e
-                );
-                body = "コーチングメッセージの生成に失敗しました";
               }
-            } else {
-              body = "記録が見つかりませんでした";
+              // --- ここまで ---
+            } catch (e) {
+              console.error(
+                `[${idx}] OpenAI APIリクエスト/レスポンスエラー`,
+                e
+              );
+              body = "コーチングメッセージの生成に失敗しました";
             }
           } catch (e) {
             console.error(`[${idx}] ユーザーデータ取得エラー`, e);
