@@ -89,6 +89,16 @@ export default function NavigationBar() {
           習慣
         </Link>
         <Link
+          href="/self_analysis"
+          className={`hover:text-pink-600 transition ${
+            pathname === "/self_analysis"
+              ? "text-pink-600 border-b-2 border-pink-600 pb-1"
+              : "text-gray-700 dark:text-gray-200"
+          }`}
+        >
+          自己分析
+        </Link>
+        <Link
           href="/settings"
           className={`hover:text-purple-600 transition ${
             pathname === "/settings"
