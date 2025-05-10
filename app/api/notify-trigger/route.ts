@@ -4,16 +4,13 @@ import { db } from "../../../drizzle/db";
 import {
   ai_logs,
   notify_settings,
-  goals,
-  records,
   subscriptions,
-  habits,
 } from "../../../drizzle/schema";
-import { eq } from "drizzle-orm";
 import { fetchOpenAIChatWithDefaults } from "../../lib/server/openai";
 import {
   buildPromptContent,
   OPENAI_DEFAULT_PARAMS,
+  fetchUserPromptData,
 } from "../../lib/server/promptBuilder";
 import { calcOpenAICost } from "../../lib/server/openaiCost";
 
@@ -69,119 +66,69 @@ export async function POST() {
     Object.entries(userSubsMap).map(async ([userId, userSubs], idx) => {
       const setting = userSettings[userId];
       let body = "APIからの通知";
-      let totalCostStr = "-";
-      let promptContent = "";
       if (setting) {
         if (setting.type === "custom" && setting.customMessage) {
           body = setting.customMessage;
         } else if (setting.type === "ai") {
           // AIコーチング文生成
-          let userGoal = "";
-          let userHabit = "";
-          let recentRecords: { date: string; mood: string[]; diary: string }[] =
-            [];
+          let body = "APIからの通知";
           try {
-            // goals
-            const goalRows = await db
-              .select()
-              .from(goals)
-              .where(eq(goals.user_id, Number(userId)))
-              .limit(1);
-            const goalRow = goalRows[0];
-            if (goalRow) {
-              userGoal =
-                Array.isArray(goalRow.short_term_goals) &&
-                goalRow.short_term_goals.length > 0
-                  ? goalRow.short_term_goals[0]
-                  : "";
-            }
-            // habitsも取得
-            let habitRow = null;
-            try {
-              const habitRows = await db
-                .select()
-                .from(habits)
-                .where(eq(habits.user_id, Number(userId)))
-                .limit(1);
-              habitRow = habitRows[0];
-            } catch {}
-            if (habitRow) {
-              userHabit =
-                Array.isArray(habitRow.ideal_habits) &&
-                habitRow.ideal_habits.length > 0
-                  ? habitRow.ideal_habits[0]
-                  : "";
-            }
-            // records
-            const recordRows = await db
-              .select()
-              .from(records)
-              .where(eq(records.user_id, Number(userId)));
-            const sorted = recordRows
-              .sort((a, b) => b.date.localeCompare(a.date))
-              .slice(0, 3)
-              .map((rec) => ({
-                date: rec.date,
-                mood: Array.isArray(rec.mood)
-                  ? rec.mood
-                  : rec.mood
-                  ? [rec.mood]
-                  : [],
-                diary: rec.diary,
-              }));
-            recentRecords = sorted;
-          } catch (e) {
-            console.error(`[${idx}] 記録/目標取得エラー`, e);
-          }
-          if (recentRecords.length > 0) {
-            promptContent = buildPromptContent(
-              recentRecords,
-              userGoal,
-              userHabit
-            );
-            try {
-              const openaiData = await fetchOpenAIChatWithDefaults(
-                promptContent
+            const userData = await fetchUserPromptData(Number(userId));
+            if (userData.recentRecords.length > 0) {
+              const promptContent = buildPromptContent(
+                userData.recentRecords,
+                userData.shortTermGoals,
+                userData.midTermGoals,
+                userData.longTermGoals,
+                userData.lifeGoals,
+                userData.coreValues,
+                userData.idealHabits,
+                userData.badHabits,
+                userData.newHabits,
+                userData.trackingHabits,
+                userData.userStrengths,
+                userData.userWeaknesses
               );
-              body =
-                openaiData.choices?.[0]?.message?.content?.trim() ||
-                "コーチングメッセージの生成に失敗しました";
-              // --- 料金計算処理追加 ---
               try {
-                const usage = openaiData.usage;
-                if (usage) {
+                const openaiData = await fetchOpenAIChatWithDefaults(
+                  promptContent
+                );
+                body =
+                  openaiData.choices?.[0]?.message?.content?.trim() ||
+                  "コーチングメッセージの生成に失敗しました";
+                // --- 料金計算処理追加 ---
+                if (openaiData.usage) {
                   const { costString } = calcOpenAICost({
                     model: OPENAI_DEFAULT_PARAMS.model,
-                    prompt_tokens: usage.prompt_tokens,
-                    completion_tokens: usage.completion_tokens,
+                    prompt_tokens: openaiData.usage.prompt_tokens,
+                    completion_tokens: openaiData.usage.completion_tokens,
                   });
-                  totalCostStr = costString;
+                  // totalCostStrはAIログ保存用に使う
+                  try {
+                    await db.insert(ai_logs).values({
+                      user_id: Number(userId),
+                      timestamp: getJSTISOString(),
+                      prompt: promptContent,
+                      response: body,
+                      total_cost_jp_en: costString,
+                    });
+                  } catch (e) {
+                    console.error(`[${idx}] AIログDB保存エラー`, e);
+                  }
                 }
+                // --- ここまで ---
               } catch (e) {
-                console.error(`[${idx}] コスト計算エラー`, e);
+                console.error(
+                  `[${idx}] OpenAI APIリクエスト/レスポンスエラー`,
+                  e
+                );
+                body = "コーチングメッセージの生成に失敗しました";
               }
-              // --- ここまで ---
-            } catch (e) {
-              console.error(
-                `[${idx}] OpenAI APIリクエスト/レスポンスエラー`,
-                e
-              );
-              body = "コーチングメッセージの生成に失敗しました";
+            } else {
+              body = "記録が見つかりませんでした";
             }
-            // AIログ保存
-            try {
-              await db.insert(ai_logs).values({
-                user_id: Number(userId),
-                timestamp: getJSTISOString(),
-                prompt: promptContent,
-                response: body,
-                total_cost_jp_en: totalCostStr,
-              });
-            } catch (e) {
-              console.error(`[${idx}] AIログDB保存エラー`, e);
-            }
-          } else {
-            body = "記録が見つかりませんでした";
+          } catch (e) {
+            console.error(`[${idx}] ユーザーデータ取得エラー`, e);
           }
         }
       }
