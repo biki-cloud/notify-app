@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import DiaryReviewPage from "./DiaryReviewPage";
-import RequireLogin from "../../components/RequireLogin";
+import RequireLogin from "./RequireLogin";
 
 export default function DiaryReviewPageClient() {
   const [userId, setUserId] = useState<number | null>(null);
