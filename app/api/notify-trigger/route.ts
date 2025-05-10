@@ -28,6 +28,15 @@ export async function POST() {
     return NextResponse.json({ notify: false, error: "購読情報取得エラー" });
   }
 
+  // user_idごとに購読をグループ化
+  const userSubsMap: Record<string, typeof subs> = {};
+  for (const sub of subs) {
+    if (!sub.user_id) continue; // user_idがnullの端末はスキップ
+    const key = String(sub.user_id);
+    if (!userSubsMap[key]) userSubsMap[key] = [];
+    userSubsMap[key].push(sub);
+  }
+
   // ユーザー設定をDBから取得
   let userSettings: Record<string, { type: string; customMessage: string }> =
     {};
@@ -48,64 +57,57 @@ export async function POST() {
     console.error("ユーザー設定取得エラー", e);
   }
 
+  // user_idごとにコーチング文生成＆全端末に送信
   const results = await Promise.allSettled(
-    subs.map(async (sub, idx) => {
-      console.log(`[${idx}] push通知処理開始`, sub);
+    Object.entries(userSubsMap).map(async ([userId, userSubs], idx) => {
+      const setting = userSettings[userId];
       let body = "APIからの通知";
-      const userId = sub.user_id;
-      const setting = userId ? userSettings[userId] : undefined;
+      let totalCostStr = "-";
+      let promptContent = "";
       if (setting) {
-        console.log(`[${idx}] ユーザー設定:`, setting);
         if (setting.type === "custom" && setting.customMessage) {
           body = setting.customMessage;
-          console.log(`[${idx}] カスタムメッセージ使用:`, body);
         } else if (setting.type === "ai") {
-          let content = "";
-          // ユーザーの最新3件の記録を取得
+          // AIコーチング文生成
           let userGoal = "";
           let userHabit = "";
           let recentRecords: { date: string; mood: string[]; diary: string }[] =
             [];
-          let totalCostStr = "-";
-
-          if (userId) {
-            try {
-              // goals
-              const goalRows = await db
-                .select()
-                .from(goals)
-                .where(eq(goals.user_id, userId))
-                .limit(1);
-              const goalRow = goalRows[0];
-              if (goalRow) {
-                userGoal = goalRow.goal;
-                userHabit = goalRow.habit;
-              }
-              // records
-              const recordRows = await db
-                .select()
-                .from(records)
-                .where(eq(records.user_id, userId));
-              const sorted = recordRows
-                .sort((a, b) => b.date.localeCompare(a.date))
-                .slice(0, 3)
-                .map((rec) => ({
-                  date: rec.date,
-                  mood: Array.isArray(rec.mood)
-                    ? rec.mood
-                    : rec.mood
-                    ? [rec.mood]
-                    : [],
-                  diary: rec.diary,
-                }));
-              recentRecords = sorted;
-              console.log(`[${idx}] 直近記録取得:`, recentRecords);
-            } catch (e) {
-              console.error(`[${idx}] 記録/目標取得エラー`, e);
+          try {
+            // goals
+            const goalRows = await db
+              .select()
+              .from(goals)
+              .where(eq(goals.user_id, Number(userId)))
+              .limit(1);
+            const goalRow = goalRows[0];
+            if (goalRow) {
+              userGoal = goalRow.goal;
+              userHabit = goalRow.habit;
             }
+            // records
+            const recordRows = await db
+              .select()
+              .from(records)
+              .where(eq(records.user_id, Number(userId)));
+            const sorted = recordRows
+              .sort((a, b) => b.date.localeCompare(a.date))
+              .slice(0, 3)
+              .map((rec) => ({
+                date: rec.date,
+                mood: Array.isArray(rec.mood)
+                  ? rec.mood
+                  : rec.mood
+                  ? [rec.mood]
+                  : [],
+                diary: rec.diary,
+              }));
+            recentRecords = sorted;
+          } catch (e) {
+            console.error(`[${idx}] 記録/目標取得エラー`, e);
           }
           if (recentRecords.length > 0) {
-            content = recentRecords
+            promptContent = recentRecords
               .map(
                 (rec, i) =>
                   `【${i + 1}件目】\n時刻: ${rec.date}\n気分: ${
@@ -114,13 +116,12 @@ export async function POST() {
               )
               .join("\n\n");
             if (userGoal) {
-              content += `\n\n【現在の目標】\n${userGoal}`;
+              promptContent += `\n\n【現在の目標】\n${userGoal}`;
             }
             if (userHabit) {
-              content += `\n\n【現在の習慣】\n${userHabit}`;
+              promptContent += `\n\n【現在の習慣】\n${userHabit}`;
             }
             try {
-              console.log(`[${idx}] OpenAI APIリクエスト送信:`, content);
               const openaiRes = await fetch(
                 "https://api.openai.com/v1/chat/completions",
                 {
@@ -137,7 +138,7 @@ export async function POST() {
                         content:
                           "あなたは『アイシールド21』の蛭間陽一のような口調で、ユーザーを悪魔的コーチングで励ます役です。\n\n以下はユーザーの直近3件の気分と日記、そして現在の目標と習慣です。日記の内容を中心に励ましつつ、目標や習慣の達成に向けたアドバイスや進捗確認も一言添えてください。特に習慣については、継続できているか、改善点や続けるコツなどもレビュー・アドバイスしてください。蛭間陽一は「クソ(名詞)」と「〜しやがれ」と「テメー」と「〜っきゃねえ」と「〜ぜ」という口調が特徴です。制限文字は300文字です。\n\n",
                       },
-                      { role: "user", content },
+                      { role: "user", content: promptContent },
                     ],
                     max_tokens: 300,
                     temperature: 0.9,
@@ -145,7 +146,6 @@ export async function POST() {
                 }
               );
               const openaiData = await openaiRes.json();
-              console.log(`[${idx}] OpenAI APIレスポンス:`, openaiData);
               body =
                 openaiData.choices?.[0]?.message?.content?.trim() ||
                 "コーチングメッセージの生成に失敗しました";
@@ -164,7 +164,6 @@ export async function POST() {
                   totalCostStr = `${totalCostJPY}円 ($${totalCostUSD.toFixed(
                     4
                   )})`;
-                  console.log(`[${idx}] OpenAI APIコスト:`, totalCostStr);
                 }
               } catch (e) {
                 console.error(`[${idx}] コスト計算エラー`, e);
@@ -178,47 +177,43 @@ export async function POST() {
               body = "コーチングメッセージの生成に失敗しました";
             }
             // AIログ保存
-            if (userId) {
-              try {
-                await db.insert(ai_logs).values({
-                  user_id: userId,
-                  timestamp: getJSTISOString(),
-                  prompt: content,
-                  response: body,
-                  total_cost_jp_en: totalCostStr,
-                });
-                console.log(`[${idx}] AIログ保存成功`);
-              } catch (e) {
-                console.error(`[${idx}] AIログDB保存エラー`, e);
-              }
+            try {
+              await db.insert(ai_logs).values({
+                user_id: Number(userId),
+                timestamp: getJSTISOString(),
+                prompt: promptContent,
+                response: body,
+                total_cost_jp_en: totalCostStr,
+              });
+            } catch (e) {
+              console.error(`[${idx}] AIログDB保存エラー`, e);
             }
           } else {
             body = "記録が見つかりませんでした";
-            console.log(`[${idx}] 記録なし`);
           }
         }
-      } else {
-        console.log(`[${idx}] ユーザー設定なし`);
       }
+      // 生成したbodyを全端末に送信
       const payload = JSON.stringify({
         title: "PWAプッシュ通知",
         body,
       });
-      const keys = sub.keys as { p256dh: string; auth: string };
-      const pushSub = {
-        endpoint: sub.endpoint,
-        keys,
-      };
-      console.log(`[${idx}] push通知送信直前:`, { pushSub, payload });
-      console.log(`[${idx}] pushSub.endpoint:`, pushSub.endpoint);
-      try {
-        const result = await sendPushNotification(pushSub, payload);
-        console.log(`[${idx}] push通知送信成功`, result);
-        return result;
-      } catch (e) {
-        console.error(`[${idx}] push通知送信エラー`, e);
-        return { error: "push通知送信エラー", detail: e };
-      }
+      const sendResults = await Promise.allSettled(
+        userSubs.map(async (sub) => {
+          const keys = sub.keys as { p256dh: string; auth: string };
+          const pushSub = {
+            endpoint: sub.endpoint,
+            keys,
+          };
+          try {
+            const result = await sendPushNotification(pushSub, payload);
+            return result;
+          } catch (e) {
+            return { error: "push通知送信エラー", detail: e };
+          }
+        })
+      );
+      return { userId, sendResults, body };
     })
   );
   console.log("全push通知処理完了", results);
