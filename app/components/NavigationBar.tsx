@@ -56,7 +56,7 @@ export default function NavigationBar() {
               : "text-gray-700 dark:text-gray-200"
           }`}
         >
-          日記
+          記録
         </Link>
         <Link
           href="/diary/review"
