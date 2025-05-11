@@ -13,6 +13,7 @@ type AiItem = {
   type: "ai";
   time: string;
   text: string;
+  coachingType?: string;
 };
 type Item = DiaryItem | AiItem;
 
@@ -97,6 +98,22 @@ export default function DiaryReviewPage({ userId }: { userId: number }) {
                   >
                     ヒル魔
                   </span>
+                  {item.coachingType && (
+                    <span
+                      style={{
+                        background: "#e0e7ff",
+                        color: "#4f46e5",
+                        borderRadius: 6,
+                        padding: "2px 8px",
+                        fontSize: 12,
+                        marginRight: 8,
+                        marginLeft: 4,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {item.coachingType}
+                    </span>
+                  )}
                 </>
               )}
               <span style={{ color: "#888", fontSize: 13 }}>{item.time}</span>
