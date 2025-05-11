@@ -10,7 +10,7 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import { MdEditNote, MdRateReview } from "react-icons/md";
-import { GiProgression, GiBrain } from "react-icons/gi";
+import { GiProgression, GiMagnifyingGlass } from "react-icons/gi";
 import { useEffect, useState } from "react";
 
 export default function NavigationBar() {
@@ -122,7 +122,7 @@ export default function NavigationBar() {
               : "text-gray-700 dark:text-gray-200"
           } flex flex-col items-center group`}
         >
-          <GiBrain size={22} />
+          <GiMagnifyingGlass size={22} />
         </Link>
         <Link
           href="/settings"
