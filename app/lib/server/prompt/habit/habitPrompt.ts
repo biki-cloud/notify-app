@@ -7,14 +7,18 @@ export function buildHabitPromptContent({
   badHabits,
   newHabits,
   trackingHabits,
-  diary,
+  diaries,
 }: {
   idealHabits: string;
   badHabits: string;
   newHabits: string;
   trackingHabits: string;
-  diary: string;
+  diaries: { date: string; mood: string; diary: string }[];
 }) {
+  const diaryText = diaries
+    .map((d) => `【${d.date}】(気分: ${d.mood})\n${d.diary}`)
+    .join("\n\n");
+
   return `
 以下はユーザーが設定した習慣の情報です。
 理想の習慣: ${idealHabits}
@@ -23,7 +27,7 @@ export function buildHabitPromptContent({
 記録中の習慣: ${trackingHabits}
 
 以下は最近の日記の内容です：
-${diary}
+${diaryText}
 
 ユーザーに寄り添い、習慣の改善・継続を励ます優しいメッセージを届けてください。日記内容に基づいて共感や気づきを促すコメントを加えてください。
 50文字以内で返答してください。
@@ -45,8 +49,12 @@ export async function getHabitPrompt(userId: number, diaryCount: number = 3) {
     .orderBy(desc(records.date))
     .limit(diaryCount);
 
-  // 日記内容を結合（改行区切り）
-  const diary = diaryRows.map((row) => row.diary).join("\n");
+  // 日記内容・気分・日付をまとめる
+  const diaries = diaryRows.map((row) => ({
+    date: row.date,
+    mood: Array.isArray(row.mood) ? row.mood.join("・") : String(row.mood),
+    diary: row.diary,
+  }));
 
   const idealHabits = habitRow?.ideal_habits?.join("、") ?? "";
   const badHabits = habitRow?.bad_habits?.join("、") ?? "";
@@ -58,6 +66,6 @@ export async function getHabitPrompt(userId: number, diaryCount: number = 3) {
     badHabits,
     newHabits,
     trackingHabits,
-    diary,
+    diaries,
   });
 }
