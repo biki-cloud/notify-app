@@ -1,8 +1,10 @@
 import { db } from "@/drizzle/db";
 import { subscriptions, ai_logs } from "@/drizzle/schema";
 import { sendPushNotification } from "@/app/lib/server/serverNotification";
-import { fetchOpenAIChatWithDefaults } from "@/app/lib/server/openai";
-import { OPENAI_DEFAULT_PARAMS } from "@/app/lib/server/prompt/promptBase";
+import {
+  fetchOpenAIChatWithDefaults,
+  OPENAI_MODEL,
+} from "@/app/lib/server/openai";
 import { calcOpenAICost } from "@/app/lib/server/openaiCost";
 
 // Push購読情報を取得し、user_idごとにグループ化
@@ -43,7 +45,7 @@ export async function generateAndLogAIMessage({
       "コーチングメッセージの生成に失敗しました";
     if (openaiData.usage) {
       const { costString } = calcOpenAICost({
-        model: OPENAI_DEFAULT_PARAMS.model,
+        model: OPENAI_MODEL,
         prompt_tokens: openaiData.usage.prompt_tokens,
         completion_tokens: openaiData.usage.completion_tokens,
       });

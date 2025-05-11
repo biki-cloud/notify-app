@@ -1,5 +1,8 @@
-import { OPENAI_DEFAULT_PARAMS } from "./prompt/promptBase";
 import { getSystemPrompt } from "./prompt/system/systemPrompt";
+
+export const OPENAI_MODEL = "gpt-4-turbo";
+export const OPENAI_MAX_TOKENS = 300;
+export const OPENAI_TEMPERATURE = 0.9;
 
 export type OpenAIChatMessage = {
   role: "system" | "user" | "assistant";
@@ -45,7 +48,9 @@ export async function fetchOpenAIChatWithDefaults(
   promptContent: string
 ): Promise<OpenAIChatResponse> {
   return fetchOpenAIChat({
-    ...OPENAI_DEFAULT_PARAMS,
+    model: OPENAI_MODEL,
+    max_tokens: OPENAI_MAX_TOKENS,
+    temperature: OPENAI_TEMPERATURE,
     messages: [
       { role: "system", content: getSystemPrompt() },
       { role: "user", content: promptContent },
