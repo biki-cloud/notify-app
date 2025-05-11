@@ -4,11 +4,11 @@ import { usePathname } from "next/navigation";
 import {
   FaBookOpen,
   FaBullseye,
-  FaUserCog,
   FaSignInAlt,
   FaUserPlus,
   FaSignOutAlt,
 } from "react-icons/fa";
+import { IoSettingsOutline } from "react-icons/io5";
 import { MdEditNote, MdRateReview } from "react-icons/md";
 import { GiProgression, GiMagnifyingGlass } from "react-icons/gi";
 import { useEffect, useState } from "react";
@@ -133,7 +133,7 @@ export default function NavigationBar() {
               : "text-gray-700 dark:text-gray-200"
           } flex flex-col items-center group`}
         >
-          <FaUserCog size={22} />
+          <IoSettingsOutline size={22} />
         </Link>
         {/* ログイン状態で表示切替 */}
         {userId ? (
