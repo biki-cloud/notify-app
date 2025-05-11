@@ -1,6 +1,7 @@
 import { db } from "@/drizzle/db";
-import { habits, goals, self_analysis, records } from "@/drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { habits, goals, self_analysis } from "@/drizzle/schema";
+import { eq } from "drizzle-orm";
+import { buildDiaryPrompt } from "../../diary/getUserDiaries";
 
 export async function buildCheerUpPrompt(userId: number) {
   // 各種データ取得
@@ -16,16 +17,7 @@ export async function buildCheerUpPrompt(userId: number) {
       .from(self_analysis)
       .where(eq(self_analysis.user_id, userId))
   )[0];
-  // 日記抜粋（最新1件の冒頭50文字）
-  const diaryRow = (
-    await db
-      .select()
-      .from(records)
-      .where(eq(records.user_id, userId))
-      .orderBy(desc(records.date))
-      .limit(1)
-  )[0];
-  const diarySnippet = diaryRow?.diary?.slice(0, 50) ?? "";
+  const diaryPrompt = await buildDiaryPrompt(userId);
 
   const idealHabits = habitRow?.ideal_habits?.join("、") ?? "";
   const shortTermGoals = goalRow?.short_term_goals?.join("、") ?? "";
@@ -36,7 +28,7 @@ export async function buildCheerUpPrompt(userId: number) {
 理想の習慣: ${idealHabits}
 短期目標: ${shortTermGoals}
 強み: ${strengths}
-日記抜粋: ${diarySnippet}
+日記: ${diaryPrompt}
 
 ユーザーを元気づけるポジティブで楽しいメッセージを送ってください。日記内容に触れ、ポジティブなフィードバックを加えてください。とにかく褒めまくってください。
   `;
