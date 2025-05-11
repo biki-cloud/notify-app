@@ -33,15 +33,20 @@ export async function generateAndLogAIMessage({
   promptContent,
   title,
   coachingType,
+  maxToken,
 }: {
   userId: number;
   promptContent: string;
   title: string;
   coachingType: string;
+  maxToken: number;
 }) {
   let body = "APIからの通知";
   try {
-    const openaiData = await fetchOpenAIChatWithDefaults(promptContent);
+    const openaiData = await fetchOpenAIChatWithDefaults(
+      promptContent,
+      maxToken
+    );
     body =
       openaiData.choices?.[0]?.message?.content?.trim() ||
       "コーチングメッセージの生成に失敗しました";

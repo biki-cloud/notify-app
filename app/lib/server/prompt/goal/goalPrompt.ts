@@ -3,6 +3,8 @@ import { goals } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { buildDiaryPrompt } from "@/app/lib/server/diary/getUserDiaries";
 
+export const MAX_TOKEN = 300;
+
 export async function buildGoalPrompt(userId: number, diaryCount: number = 3) {
   // 目標データ取得
   const goalRow = (
@@ -30,5 +32,6 @@ export async function buildGoalPrompt(userId: number, diaryCount: number = 3) {
 ${dailyPrompt}
 
 今週の目標振り返りとモチベーションを高めるメッセージを送ってください。日記内容を反映して、目標達成の進捗を共に振り返りましょう。
+最大制限文字数: ${MAX_TOKEN - 50}トークン
   `;
 }

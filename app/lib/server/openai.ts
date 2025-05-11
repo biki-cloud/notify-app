@@ -45,11 +45,12 @@ export async function fetchOpenAIChat(
 }
 
 export async function fetchOpenAIChatWithDefaults(
-  promptContent: string
+  promptContent: string,
+  maxToken: number = OPENAI_MAX_TOKENS
 ): Promise<OpenAIChatResponse> {
   return fetchOpenAIChat({
     model: OPENAI_MODEL,
-    max_tokens: OPENAI_MAX_TOKENS,
+    max_tokens: maxToken,
     temperature: OPENAI_TEMPERATURE,
     messages: [
       { role: "system", content: getSystemPrompt() },

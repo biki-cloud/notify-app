@@ -3,6 +3,8 @@ import { habits, goals, self_analysis } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { buildDiaryPrompt } from "../../diary/getUserDiaries";
 
+export const MAX_TOKEN = 150;
+
 export async function buildCheerUpPrompt(userId: number) {
   // 各種データ取得
   const habitRow = (
@@ -30,6 +32,8 @@ export async function buildCheerUpPrompt(userId: number) {
 強み: ${strengths}
 日記: ${diaryPrompt}
 
-ユーザーを元気づけるポジティブで楽しいメッセージを送ってください。日記内容に触れ、ポジティブなフィードバックを加えてください。とにかく褒めまくってください。
+ユーザーを元気づけるポジティブで楽しいメッセージを送ってください。
+日記内容に触れ、とにかく大袈裟に褒めまくってください。
+最大制限文字数: ${MAX_TOKEN - 50}トークン
   `;
 }

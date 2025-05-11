@@ -4,7 +4,10 @@ import {
   generateAndLogAIMessage,
   sendPushToAll,
 } from "@/app/lib/server/notify/notifyUtils";
-import { buildSelfAnalysisPrompt } from "@/app/lib/server/prompt/self-analysis/selfAnalysisPrompt";
+import {
+  buildSelfAnalysisPrompt,
+  MAX_TOKEN,
+} from "@/app/lib/server/prompt/self-analysis/selfAnalysisPrompt";
 
 export async function POST() {
   // Push購読情報を取得し、user_idごとにグループ化
@@ -26,6 +29,7 @@ export async function POST() {
         promptContent,
         title: "🧠自己分析フィードバック通知🧠",
         coachingType: "self-analysis",
+        maxToken: MAX_TOKEN,
       });
       // Push通知送信
       const sendResults = await sendPushToAll(userSubs, payload);

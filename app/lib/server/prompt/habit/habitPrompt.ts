@@ -3,6 +3,8 @@ import { buildDiaryPrompt } from "../../diary/getUserDiaries";
 import { habits } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 
+export const MAX_TOKEN = 100;
+
 // ユーザーIDを受け取り、プロンプトを生成して返す（直近の日記件数をオプション指定可、デフォルト3件）
 export async function buildHabitPrompt(userId: number, diaryCount: number = 3) {
   // DBから習慣データ取得
@@ -28,6 +30,6 @@ export async function buildHabitPrompt(userId: number, diaryCount: number = 3) {
 ${dailyPrompt}
 
 ユーザーに寄り添い、習慣の改善・継続を励ます優しいメッセージを届けてください。日記内容に基づいて共感や気づきを促すコメントを加えてください。
-50文字以内で返答してください。
+最大制限文字数: ${MAX_TOKEN - 50}トークン
   `;
 }

@@ -4,7 +4,10 @@ import {
   generateAndLogAIMessage,
   sendPushToAll,
 } from "@/app/lib/server/notify/notifyUtils";
-import { buildCheerUpPrompt } from "@/app/lib/server/prompt/cheer-up/cheerUpPrompt";
+import {
+  buildCheerUpPrompt,
+  MAX_TOKEN,
+} from "@/app/lib/server/prompt/cheer-up/cheerUpPrompt";
 
 export async function POST() {
   // Push購読情報を取得し、user_idごとにグループ化
@@ -26,6 +29,7 @@ export async function POST() {
         promptContent,
         title: "🎉あなたを全力で褒めます🎉",
         coachingType: "cheer-up",
+        maxToken: MAX_TOKEN,
       });
       // Push通知送信
       const sendResults = await sendPushToAll(userSubs, payload);

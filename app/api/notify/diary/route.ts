@@ -4,7 +4,10 @@ import {
   generateAndLogAIMessage,
   sendPushToAll,
 } from "@/app/lib/server/notify/notifyUtils";
-import { buildDiaryFeedbackPrompt } from "@/app/lib/server/prompt/diary/diaryPrompt";
+import {
+  buildDiaryFeedbackPrompt,
+  MAX_TOKEN,
+} from "@/app/lib/server/prompt/diary/diaryPrompt";
 
 export async function POST() {
   // Push購読情報を取得し、user_idごとにグループ化
@@ -26,6 +29,7 @@ export async function POST() {
         promptContent,
         title: "📓日記フィードバック通知📓",
         coachingType: "diary",
+        maxToken: MAX_TOKEN,
       });
       // Push通知送信
       const sendResults = await sendPushToAll(userSubs, payload);

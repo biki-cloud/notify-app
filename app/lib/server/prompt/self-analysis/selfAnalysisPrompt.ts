@@ -3,6 +3,8 @@ import { self_analysis } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { buildDiaryPrompt } from "@/app/lib/server/diary/getUserDiaries";
 
+export const MAX_TOKEN = 300;
+
 export async function buildSelfAnalysisPrompt(
   userId: number,
   diaryCount: number = 3
@@ -30,5 +32,6 @@ export async function buildSelfAnalysisPrompt(
 ${dailyPrompt}
 
 ユーザーが強みを活かし、課題に前向きに取り組むためのメッセージを送ってください。日記内容から得られる気づきや成長を感じさせるメッセージを加えてください。
+最大制限文字数: ${MAX_TOKEN - 50}トークン
   `;
 }
