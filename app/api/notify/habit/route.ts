@@ -4,7 +4,7 @@ import {
   generateAndLogAIMessage,
   sendPushToAll,
 } from "@/app/lib/server/notify/notifyUtils";
-import { getHabitPrompt } from "@/app/lib/server/prompt/habit/habitPrompt";
+import { buildHabitPrompt } from "@/app/lib/server/prompt/habit/habitPrompt";
 
 export async function POST() {
   // Push購読情報を取得し、user_idごとにグループ化
@@ -19,7 +19,7 @@ export async function POST() {
   const results = await Promise.allSettled(
     Object.entries(userSubsMap).map(async ([userId, userSubs]) => {
       // プロンプト生成（ここだけ個別）
-      const promptContent = await getHabitPrompt(Number(userId));
+      const promptContent = await buildHabitPrompt(Number(userId));
       // AIメッセージ生成＆ログ保存
       const { payload, body } = await generateAndLogAIMessage({
         userId: Number(userId),

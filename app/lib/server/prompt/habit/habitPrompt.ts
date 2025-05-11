@@ -4,7 +4,7 @@ import { habits } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 
 // ユーザーIDを受け取り、プロンプトを生成して返す（直近の日記件数をオプション指定可、デフォルト3件）
-export async function getHabitPrompt(userId: number, diaryCount: number = 3) {
+export async function buildHabitPrompt(userId: number, diaryCount: number = 3) {
   // DBから習慣データ取得
   const habitRow = (
     await db.select().from(habits).where(eq(habits.user_id, userId))
