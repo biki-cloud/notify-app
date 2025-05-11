@@ -27,7 +27,7 @@ export default function UserSelfAnalysisForm() {
   // 既存データ取得
   useEffect(() => {
     if (!userId) return;
-    fetch(`/api/self_analysis?userId=${userId}`)
+    fetch(`/api/self-analysis?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data) {
