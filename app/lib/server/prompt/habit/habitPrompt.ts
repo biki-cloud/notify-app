@@ -1,24 +1,21 @@
 import { db } from "@/drizzle/db";
-import { habits, records } from "@/drizzle/schema";
-import { desc, eq } from "drizzle-orm";
+import { habits } from "@/drizzle/schema";
+import { eq } from "drizzle-orm";
+import { buildDiaryPrompt } from "@/app/lib/server/diary/getUserDiaries";
 
 export function buildHabitPromptContent({
   idealHabits,
   badHabits,
   newHabits,
   trackingHabits,
-  diaries,
+  dailyPrompt,
 }: {
   idealHabits: string;
   badHabits: string;
   newHabits: string;
   trackingHabits: string;
-  diaries: { date: string; mood: string; diary: string }[];
+  dailyPrompt: string;
 }) {
-  const diaryText = diaries
-    .map((d) => `【${d.date}】(気分: ${d.mood})\n${d.diary}`)
-    .join("\n\n");
-
   return `
 以下はユーザーが設定した習慣の情報です。
 理想の習慣: ${idealHabits}
@@ -27,7 +24,7 @@ export function buildHabitPromptContent({
 記録中の習慣: ${trackingHabits}
 
 以下は最近の日記の内容です：
-${diaryText}
+${dailyPrompt}
 
 ユーザーに寄り添い、習慣の改善・継続を励ます優しいメッセージを届けてください。日記内容に基づいて共感や気づきを促すコメントを加えてください。
 50文字以内で返答してください。
@@ -41,20 +38,7 @@ export async function getHabitPrompt(userId: number, diaryCount: number = 3) {
     await db.select().from(habits).where(eq(habits.user_id, userId))
   )[0];
 
-  // DBから最新の日記データを複数件取得
-  const diaryRows = await db
-    .select()
-    .from(records)
-    .where(eq(records.user_id, userId))
-    .orderBy(desc(records.date))
-    .limit(diaryCount);
-
-  // 日記内容・気分・日付をまとめる
-  const diaries = diaryRows.map((row) => ({
-    date: row.date,
-    mood: Array.isArray(row.mood) ? row.mood.join("・") : String(row.mood),
-    diary: row.diary,
-  }));
+  const dailyPrompt = await buildDiaryPrompt(userId, diaryCount);
 
   const idealHabits = habitRow?.ideal_habits?.join("、") ?? "";
   const badHabits = habitRow?.bad_habits?.join("、") ?? "";
@@ -66,6 +50,6 @@ export async function getHabitPrompt(userId: number, diaryCount: number = 3) {
     badHabits,
     newHabits,
     trackingHabits,
-    diaries,
+    dailyPrompt,
   });
 }
