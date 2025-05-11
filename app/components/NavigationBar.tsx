@@ -7,16 +7,19 @@ import {
   FaSignInAlt,
   FaUserPlus,
   FaSignOutAlt,
+  FaUserCircle,
 } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { MdEditNote, MdRateReview } from "react-icons/md";
 import { GiProgression, GiMagnifyingGlass } from "react-icons/gi";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function NavigationBar() {
   const pathname = usePathname();
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -53,6 +56,22 @@ export default function NavigationBar() {
       };
     }
   }, []);
+
+  useEffect(() => {
+    if (!showUserDropdown) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowUserDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showUserDropdown]);
 
   return (
     <nav className="w-full h-16 flex items-center justify-between px-6 bg-white/90 dark:bg-gray-900/80 shadow-md fixed top-0 left-0 z-20">
@@ -138,9 +157,26 @@ export default function NavigationBar() {
         {/* ログイン状態で表示切替 */}
         {userId ? (
           <>
-            <span className="ml-4 text-sm text-gray-600 dark:text-gray-300 hidden md:inline-block">
-              {username ? `${username} さんでログイン中` : "ログイン中"}
-            </span>
+            <div className="relative ml-4" ref={userDropdownRef}>
+              <button
+                onClick={() => setShowUserDropdown((prev) => !prev)}
+                className="flex items-center focus:outline-none"
+                title="ユーザー情報"
+                type="button"
+              >
+                <FaUserCircle
+                  size={26}
+                  className="text-gray-600 dark:text-gray-300"
+                />
+              </button>
+              {showUserDropdown && (
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-40 bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-700 z-30 text-center py-2">
+                  <span className="text-sm text-gray-700 dark:text-gray-200">
+                    {username ? `${username} さんでログイン中` : "ログイン中"}
+                  </span>
+                </div>
+              )}
+            </div>
             <button
               onClick={async () => {
                 await fetch("/api/logout", { method: "POST" });
