@@ -37,6 +37,7 @@ export async function GET(req: Request) {
   const aiEntries = aiLogRows.map((entry) => ({
     timestamp: entry.timestamp,
     response: entry.response,
+    coachingType: entry.coaching_type,
   }));
 
   // recordとai_logを統合して時系列順に並べる
@@ -51,6 +52,7 @@ export async function GET(req: Request) {
       type: "ai" as const,
       time: entry.timestamp,
       text: entry.response,
+      coachingType: entry.coachingType,
     })),
   ].sort((a, b) => b.time.localeCompare(a.time));
 
