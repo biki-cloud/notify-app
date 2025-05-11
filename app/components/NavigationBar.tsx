@@ -39,16 +39,6 @@ export default function NavigationBar() {
       </div>
       <div className="flex gap-6 text-base font-semibold items-center">
         <Link
-          href="/"
-          className={`hover:text-blue-600 transition ${
-            pathname === "/"
-              ? "text-blue-600 border-b-2 border-blue-600 pb-1"
-              : "text-gray-700 dark:text-gray-200"
-          }`}
-        >
-          ホーム
-        </Link>
-        <Link
           href="/diary"
           className={`hover:text-blue-600 transition ${
             pathname === "/diary"
