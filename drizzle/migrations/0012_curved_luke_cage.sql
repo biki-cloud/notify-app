@@ -1,0 +1,1 @@
+ALTER TABLE "notify_app"."notify_settings" ALTER COLUMN "custom_message" SET DATA TYPE text[] USING ARRAY[custom_message];
