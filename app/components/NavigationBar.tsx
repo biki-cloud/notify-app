@@ -7,13 +7,35 @@ import { useEffect, useState } from "react";
 export default function NavigationBar() {
   const pathname = usePathname();
   const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setUserId(localStorage.getItem("userId"));
+      const id = localStorage.getItem("userId");
+      setUserId(id);
+      if (id) {
+        fetch(`/api/user?userId=${id}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.username) setUsername(data.username);
+            else setUsername(null);
+          });
+      } else {
+        setUsername(null);
+      }
       const handleStorage = (e: StorageEvent) => {
         if (e.key === "userId") {
           setUserId(e.newValue);
+          if (e.newValue) {
+            fetch(`/api/user?userId=${e.newValue}`)
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.username) setUsername(data.username);
+                else setUsername(null);
+              });
+          } else {
+            setUsername(null);
+          }
         }
       };
       window.addEventListener("storage", handleStorage);
@@ -102,13 +124,14 @@ export default function NavigationBar() {
         {userId ? (
           <>
             <span className="ml-4 text-sm text-gray-600 dark:text-gray-300">
-              {userId} さんでログイン中
+              {username ? `${username} さんでログイン中` : "ログイン中"}
             </span>
             <button
               onClick={async () => {
                 await fetch("/api/logout", { method: "POST" });
                 localStorage.removeItem("userId");
                 setUserId(null);
+                setUsername(null);
                 window.location.href = "/";
               }}
               className="ml-4 px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-red-200 hover:text-red-700 transition border border-gray-300 dark:border-gray-600"
