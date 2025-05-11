@@ -25,6 +25,7 @@ export async function POST() {
         userId: Number(userId),
         promptContent,
         title: "🧠自己分析フィードバック通知🧠",
+        coachingType: "self-analysis",
       });
       // Push通知送信
       const sendResults = await sendPushToAll(userSubs, payload);

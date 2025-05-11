@@ -25,6 +25,7 @@ export async function POST() {
         userId: Number(userId),
         promptContent,
         title: "🎉あなたを全力で褒めます🎉",
+        coachingType: "cheer-up",
       });
       // Push通知送信
       const sendResults = await sendPushToAll(userSubs, payload);

@@ -85,4 +85,5 @@ export const ai_logs = schema.table("ai_logs", {
   prompt: text("prompt").notNull(),
   response: text("response").notNull(),
   total_cost_jp_en: varchar("total_cost_jp_en", { length: 64 }).notNull(),
+  coaching_type: varchar("coaching_type", { length: 32 }),
 });

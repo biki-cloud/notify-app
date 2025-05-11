@@ -32,10 +32,12 @@ export async function generateAndLogAIMessage({
   userId,
   promptContent,
   title,
+  coachingType,
 }: {
   userId: number;
   promptContent: string;
   title: string;
+  coachingType: string;
 }) {
   let body = "APIからの通知";
   try {
@@ -56,6 +58,7 @@ export async function generateAndLogAIMessage({
           prompt: promptContent,
           response: body,
           total_cost_jp_en: costString,
+          coaching_type: coachingType,
         });
       } catch {}
     }

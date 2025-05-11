@@ -25,6 +25,7 @@ export async function POST() {
         userId: Number(userId),
         promptContent,
         title: "📓日記フィードバック通知📓",
+        coachingType: "diary",
       });
       // Push通知送信
       const sendResults = await sendPushToAll(userSubs, payload);

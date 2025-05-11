@@ -1,0 +1,1 @@
+ALTER TABLE "notify_app"."ai_logs" ADD COLUMN "coaching_type" varchar(32);
