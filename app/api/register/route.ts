@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   if (userId) {
     await db
       .insert(notify_settings)
-      .values({ user_id: userId, type: "default", custom_message: "" });
+      .values({ user_id: userId, type: "default", custom_message: [] });
   }
   return NextResponse.json({ ok: true, userId });
 }

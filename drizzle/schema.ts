@@ -66,7 +66,7 @@ export const notify_settings = schema.table("notify_settings", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").notNull(),
   type: varchar("type", { length: 32 }).notNull(),
-  custom_message: text("custom_message").notNull(),
+  custom_message: text("custom_message").array().notNull(),
 });
 
 // Push通知購読テーブル

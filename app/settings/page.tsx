@@ -8,7 +8,7 @@ const USERID_KEY = "userId";
 export default function SettingsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [type, setType] = useState<"ai" | "custom">("ai");
-  const [customMessage, setCustomMessage] = useState("");
+  const [customMessage, setCustomMessage] = useState<string[]>([""]);
   const [saved, setSaved] = useState(false);
 
   // ユーザーIDの管理
@@ -24,7 +24,15 @@ export default function SettingsPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.type) setType(data.type);
-        if (data.customMessage) setCustomMessage(data.customMessage);
+        if (data.customMessage) {
+          if (Array.isArray(data.customMessage)) {
+            setCustomMessage(
+              data.customMessage.length > 0 ? data.customMessage : [""]
+            );
+          } else if (typeof data.customMessage === "string") {
+            setCustomMessage([data.customMessage]);
+          }
+        }
       });
   }, [userId]);
 
@@ -171,13 +179,41 @@ export default function SettingsPage() {
           {type === "custom" && (
             <div className="mb-4">
               <label className="block mb-1">メッセージ内容：</label>
-              <input
-                type="text"
-                value={customMessage}
-                onChange={(e) => setCustomMessage(e.target.value)}
-                className="w-full border rounded px-2 py-1"
-                placeholder="通知で表示するメッセージを入力"
-              />
+              {customMessage.map((msg, idx) => (
+                <div className="flex items-center mb-1" key={idx}>
+                  <input
+                    type="text"
+                    value={msg}
+                    onChange={(e) => {
+                      const newArr = [...customMessage];
+                      newArr[idx] = e.target.value;
+                      setCustomMessage(newArr);
+                    }}
+                    className="w-full border rounded px-2 py-1"
+                    placeholder="通知で表示するメッセージを入力"
+                  />
+                  {customMessage.length > 1 && (
+                    <button
+                      type="button"
+                      className="ml-2 text-red-500"
+                      onClick={() => {
+                        setCustomMessage(
+                          customMessage.filter((_, i) => i !== idx)
+                        );
+                      }}
+                    >
+                      削除
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                className="text-blue-600 text-sm mt-1"
+                onClick={() => setCustomMessage([...customMessage, ""])}
+              >
+                ＋追加
+              </button>
             </div>
           )}
           <button
