@@ -4,7 +4,7 @@ import {
   generateAndLogAIMessage,
   sendPushToAll,
 } from "@/app/lib/server/notify/notifyUtils";
-import { buildSelfAnalysisPrompt } from "@/app/lib/server/prompt/self_analysis/selfAnalysisPrompt";
+import { buildCheerUpPrompt } from "@/app/lib/server/prompt/cheer-up/cheerUpPrompt";
 
 export async function POST() {
   // Push購読情報を取得し、user_idごとにグループ化
@@ -19,12 +19,12 @@ export async function POST() {
   const results = await Promise.allSettled(
     Object.entries(userSubsMap).map(async ([userId, userSubs]) => {
       // プロンプト生成
-      const promptContent = await buildSelfAnalysisPrompt(Number(userId));
+      const promptContent = await buildCheerUpPrompt(Number(userId));
       // AIメッセージ生成＆ログ保存
       const { payload, body } = await generateAndLogAIMessage({
         userId: Number(userId),
         promptContent,
-        title: "🧠自己分析フィードバック通知🧠",
+        title: "🎉あなたを全力で褒めます🎉",
       });
       // Push通知送信
       const sendResults = await sendPushToAll(userSubs, payload);

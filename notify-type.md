@@ -91,7 +91,7 @@
 
 ### 5. 🎉 褒めまくる通知
 
-- **API 名**: `/api/notify/encouragement`
+- **API 名**: `/api/notify/cheerup`
 - **目的**: ユーザーを全力で肯定し、気分を上げる
 - **通知頻度**: 不定期（ユーザーの進捗に応じて）
 - **使用データ**: `habits.ideal_habits`, `goals.short_term_goals`, `self_analysis.strengths`, `records.diary_snippet`
@@ -104,7 +104,7 @@
   強み: {self_analysis.strengths}
   日記抜粋: {records.diary_snippet}
 
-  ユーザーを元気づけるポジティブで楽しいメッセージを送ってください。日記内容に触れ、ポジティブなフィードバックを加えてください。
+  ユーザーを元気づけるポジティブで楽しいメッセージを送ってください。日記内容に触れ、ポジティブなフィードバックを加えてください。とにかく褒めまくってください。
   ```
 
 ---
