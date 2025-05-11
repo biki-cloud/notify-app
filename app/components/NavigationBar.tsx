@@ -10,7 +10,7 @@ import {
   FaUserCircle,
 } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
-import { MdEditNote, MdRateReview } from "react-icons/md";
+import { MdEditNote, MdRateReview, MdApps } from "react-icons/md";
 import { GiProgression, GiMagnifyingGlass } from "react-icons/gi";
 import { useEffect, useState, useRef } from "react";
 
@@ -20,6 +20,8 @@ export default function NavigationBar() {
   const [username, setUsername] = useState<string | null>(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
+  const menuDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -73,6 +75,22 @@ export default function NavigationBar() {
     };
   }, [showUserDropdown]);
 
+  useEffect(() => {
+    if (!showMenuDropdown) return;
+    function handleClickOutsideMenu(event: MouseEvent) {
+      if (
+        menuDropdownRef.current &&
+        !menuDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowMenuDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutsideMenu);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideMenu);
+    };
+  }, [showMenuDropdown]);
+
   return (
     <nav className="w-full h-16 flex items-center justify-between px-6 bg-white/90 dark:bg-gray-900/80 shadow-md fixed top-0 left-0 z-20">
       <div className="text-xl font-bold tracking-tight text-blue-700 dark:text-blue-300 flex items-center gap-2">
@@ -110,39 +128,44 @@ export default function NavigationBar() {
         >
           <MdRateReview size={22} />
         </Link>
-        <Link
-          href="/goals"
-          title="目標"
-          className={`hover:text-pink-600 transition ${
-            pathname === "/goals"
-              ? "text-pink-600 border-b-2 border-pink-600 pb-1"
-              : "text-gray-700 dark:text-gray-200"
-          } flex flex-col items-center group`}
-        >
-          <FaBullseye size={22} />
-        </Link>
-        <Link
-          href="/habits"
-          title="習慣"
-          className={`hover:text-pink-600 transition ${
-            pathname === "/habits"
-              ? "text-pink-600 border-b-2 border-pink-600 pb-1"
-              : "text-gray-700 dark:text-gray-200"
-          } flex flex-col items-center group`}
-        >
-          <GiProgression size={22} />
-        </Link>
-        <Link
-          href="/self_analysis"
-          title="自己分析"
-          className={`hover:text-pink-600 transition ${
-            pathname === "/self_analysis"
-              ? "text-pink-600 border-b-2 border-pink-600 pb-1"
-              : "text-gray-700 dark:text-gray-200"
-          } flex flex-col items-center group`}
-        >
-          <GiMagnifyingGlass size={22} />
-        </Link>
+        <div className="relative" ref={menuDropdownRef}>
+          <button
+            onClick={() => setShowMenuDropdown((prev) => !prev)}
+            className="flex items-center px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+            type="button"
+            aria-label="メニュー"
+          >
+            <MdApps size={26} />
+          </button>
+          {showMenuDropdown && (
+            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-36 bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-700 z-30 text-center py-2">
+              <Link
+                href="/goals"
+                className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                onClick={() => setShowMenuDropdown(false)}
+              >
+                <FaBullseye className="inline-block mr-2" />
+                目標
+              </Link>
+              <Link
+                href="/habits"
+                className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                onClick={() => setShowMenuDropdown(false)}
+              >
+                <GiProgression className="inline-block mr-2" />
+                習慣
+              </Link>
+              <Link
+                href="/self_analysis"
+                className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                onClick={() => setShowMenuDropdown(false)}
+              >
+                <GiMagnifyingGlass className="inline-block mr-2" />
+                自己分析
+              </Link>
+            </div>
+          )}
+        </div>
         <Link
           href="/settings"
           title="設定"
