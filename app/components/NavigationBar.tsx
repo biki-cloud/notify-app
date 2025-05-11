@@ -1,7 +1,16 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaBookOpen } from "react-icons/fa";
+import {
+  FaBookOpen,
+  FaBullseye,
+  FaUserCog,
+  FaSignInAlt,
+  FaUserPlus,
+  FaSignOutAlt,
+} from "react-icons/fa";
+import { MdEditNote, MdRateReview } from "react-icons/md";
+import { GiProgression, GiBrain } from "react-icons/gi";
 import { useEffect, useState } from "react";
 
 export default function NavigationBar() {
@@ -62,68 +71,74 @@ export default function NavigationBar() {
       <div className="flex gap-6 text-base font-semibold items-center">
         <Link
           href="/diary"
+          title="記録"
           className={`hover:text-blue-600 transition ${
             pathname === "/diary"
               ? "text-blue-600 border-b-2 border-blue-600 pb-1"
               : "text-gray-700 dark:text-gray-200"
-          }`}
+          } flex flex-col items-center group`}
         >
-          記録
+          <MdEditNote size={22} />
         </Link>
         <Link
           href="/diary/review"
+          title="レビュー"
           className={`hover:text-indigo-600 transition ${
             pathname === "/diary/review"
               ? "text-indigo-600 border-b-2 border-indigo-600 pb-1"
               : "text-gray-700 dark:text-gray-200"
-          }`}
+          } flex flex-col items-center group`}
         >
-          レビュー
+          <MdRateReview size={22} />
         </Link>
         <Link
           href="/goals"
+          title="目標"
           className={`hover:text-pink-600 transition ${
             pathname === "/goals"
               ? "text-pink-600 border-b-2 border-pink-600 pb-1"
               : "text-gray-700 dark:text-gray-200"
-          }`}
+          } flex flex-col items-center group`}
         >
-          目標
+          <FaBullseye size={22} />
         </Link>
         <Link
           href="/habits"
+          title="習慣"
           className={`hover:text-pink-600 transition ${
             pathname === "/habits"
               ? "text-pink-600 border-b-2 border-pink-600 pb-1"
               : "text-gray-700 dark:text-gray-200"
-          }`}
+          } flex flex-col items-center group`}
         >
-          習慣
+          <GiProgression size={22} />
         </Link>
         <Link
           href="/self_analysis"
+          title="自己分析"
           className={`hover:text-pink-600 transition ${
             pathname === "/self_analysis"
               ? "text-pink-600 border-b-2 border-pink-600 pb-1"
               : "text-gray-700 dark:text-gray-200"
-          }`}
+          } flex flex-col items-center group`}
         >
-          自己分析
+          <GiBrain size={22} />
         </Link>
         <Link
           href="/settings"
+          title="設定"
           className={`hover:text-purple-600 transition ${
             pathname === "/settings"
               ? "text-purple-600 border-b-2 border-purple-600 pb-1"
               : "text-gray-700 dark:text-gray-200"
-          }`}
+          } flex flex-col items-center group`}
         >
-          設定
+          <FaUserCog size={22} />
         </Link>
         {/* ログイン状態で表示切替 */}
         {userId ? (
           <>
-            <span className="ml-4 text-sm text-gray-600 dark:text-gray-300">
+            <span className="ml-4 text-sm text-gray-600 dark:text-gray-300 hidden md:inline-block">
               {username ? `${username} さんでログイン中` : "ログイン中"}
             </span>
             <button
@@ -134,33 +149,36 @@ export default function NavigationBar() {
                 setUsername(null);
                 window.location.href = "/";
               }}
-              className="ml-4 px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-red-200 hover:text-red-700 transition border border-gray-300 dark:border-gray-600"
+              title="サインアウト"
+              className="ml-4 px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-red-200 hover:text-red-700 transition border border-gray-300 dark:border-gray-600 flex items-center"
               type="button"
             >
-              サインアウト
+              <FaSignOutAlt size={20} />
             </button>
           </>
         ) : (
           <>
             <Link
               href="/login"
+              title="ログイン"
               className={`hover:text-green-600 transition ${
                 pathname === "/login"
                   ? "text-green-600 border-b-2 border-green-600 pb-1"
                   : "text-gray-700 dark:text-gray-200"
-              }`}
+              } flex flex-col items-center group`}
             >
-              ログイン
+              <FaSignInAlt size={22} />
             </Link>
             <Link
               href="/register"
+              title="新規登録"
               className={`hover:text-orange-600 transition ${
                 pathname === "/register"
                   ? "text-orange-600 border-b-2 border-orange-600 pb-1"
                   : "text-gray-700 dark:text-gray-200"
-              }`}
+              } flex flex-col items-center group`}
             >
-              新規登録
+              <FaUserPlus size={22} />
             </Link>
           </>
         )}
