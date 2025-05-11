@@ -11,7 +11,7 @@ export default function DiaryClient({
     setLoading(true);
     setMessage("");
     try {
-      const res = await fetch("/api/notify-trigger", {
+      const res = await fetch("/api/notify/habit", {
         method: "POST",
       });
       if (res.ok) {
@@ -44,7 +44,7 @@ export default function DiaryClient({
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}
       >
-        {loading ? "送信中..." : "コーチングお願い！"}
+        {loading ? "送信中..." : "習慣コーチングお願い！"}
       </button>
       {message && (
         <div style={{ marginTop: 12, color: "#6c47ff", fontWeight: "bold" }}>

@@ -1,13 +1,11 @@
-import { db } from "../../../drizzle/db";
-import { goals, habits, self_analysis, records } from "../../../drizzle/schema";
+import { db } from "../../../../drizzle/db";
+import {
+  goals,
+  habits,
+  self_analysis,
+  records,
+} from "../../../../drizzle/schema";
 import { eq } from "drizzle-orm";
-
-export function getSystemPrompt(): string {
-  return (
-    "あなたは『アイシールド21』の蛭間陽一のような口調で、ユーザーを悪魔的コーチングで励ます役です。\n\n" +
-    "以下はユーザーの直近3件の気分と日記、そして現在の目標と習慣です。日記の内容を中心に励ましつつ、目標や習慣の達成に向けたアドバイスや進捗確認も一言添えてください。特に習慣については、継続できているか、改善点や続けるコツなどもレビュー・アドバイスしてください。蛭間陽一は「クソ(名詞)」と「〜しやがれ」と「テメー」と「〜っきゃねえ」と「〜ぜ」という口調が特徴です。制限文字は300文字です。\n\n"
-  );
-}
 
 export const OPENAI_DEFAULT_PARAMS = {
   model: "gpt-4-turbo",

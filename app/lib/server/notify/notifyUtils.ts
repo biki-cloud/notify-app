@@ -2,7 +2,7 @@ import { db } from "@/drizzle/db";
 import { subscriptions, ai_logs } from "@/drizzle/schema";
 import { sendPushNotification } from "@/app/lib/server/serverNotification";
 import { fetchOpenAIChatWithDefaults } from "@/app/lib/server/openai";
-import { OPENAI_DEFAULT_PARAMS } from "@/app/lib/server/promptBase";
+import { OPENAI_DEFAULT_PARAMS } from "@/app/lib/server/prompt/promptBase";
 import { calcOpenAICost } from "@/app/lib/server/openaiCost";
 
 // Push購読情報を取得し、user_idごとにグループ化
